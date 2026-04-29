@@ -1,0 +1,58 @@
+import { FileRecord } from "@/lib/types";
+
+export const mockFiles: FileRecord[] = [
+  {
+    id: "f001",
+    name: "employee-contract-2026.pdf",
+    classification: "Confidential",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-20",
+    size: "1.2 MB",
+    status: "Available",
+  },
+  {
+    id: "f002",
+    name: "vendor-risk-assessment.xlsx",
+    classification: "Internal",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-18",
+    size: "842 KB",
+    status: "Available",
+  },
+  {
+    id: "f003",
+    name: "internal-policy-review.docx",
+    classification: "Internal",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-15",
+    size: "320 KB",
+    status: "Processing",
+  },
+  {
+    id: "f004",
+    name: "restricted-incident-report.pdf",
+    classification: "Restricted",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-12",
+    size: "2.4 MB",
+    status: "Available",
+  },
+  {
+    id: "f005",
+    name: "finance-audit-summary.pdf",
+    classification: "Confidential",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-10",
+    size: "1.8 MB",
+    status: "Quarantined",
+  },
+  {
+    id: "f006",
+    name: "onboarding-records.zip",
+    classification: "Public",
+    owner: "gowthamtamiljagan@gmail.com",
+    uploadedAt: "2026-04-08",
+    size: "5.1 MB",
+    status: "Available",
+  },
+];

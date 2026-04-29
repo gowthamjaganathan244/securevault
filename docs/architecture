@@ -1,0 +1,9 @@
+User → Cognito (MFA)
+     → Frontend (Next.js)
+     → API Gateway
+     → Lambda
+     → S3 (private files)
+     → DynamoDB (metadata + logs)
+
+Logs → CloudWatch
+Audit → DynamoDB + CloudTrail

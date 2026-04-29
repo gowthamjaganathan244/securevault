@@ -1,0 +1,8 @@
+Cognito → authentication + MFA + groups
+S3 → file storage (private)
+DynamoDB → metadata + audit logs
+Lambda → backend logic
+API Gateway → API layer
+CloudWatch → logs
+CloudTrail → account-level audit
+IAM → permissions

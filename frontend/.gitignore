@@ -1,0 +1,28 @@
+# dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# builds
+dist/
+build/
+
+# env files
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# system
+.DS_Store
+
+# logs
+*.log
+*.tsbuildinfo
+test_upload.txt
+frontend/test_upload.txt
+frontend/tsconfig.tsbuildinfo
