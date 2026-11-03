@@ -112,3 +112,61 @@ export async function requestDownload(fileId: string, userEmail: string, userRol
     return { ok: false, reason: "Network error while requesting a download link." };
   }
 }
+
+/* ── Pending integrations ─────────────────────────────────────────────
+ * The UI for these actions is complete, but the vault API does not expose
+ * the endpoints yet (verified: each path returns 404). Flip a flag to true
+ * only once its endpoint is deployed — until then the UI explains that the
+ * action isn't connected and never calls the network or reports success.
+ */
+export const integrations = {
+  deleteFile: false,
+  replaceFile: false,
+  updateMetadata: false,
+  versionHistory: false,
+  userDirectory: false,
+} as const;
+
+export const pendingEndpoints = {
+  deleteFile: "DELETE /files/{fileId}",
+  replaceFile: "POST /files/{fileId}/replace-url",
+  updateMetadata: "PATCH /files/{fileId}",
+  versionHistory: "GET /files/{fileId}/versions",
+  userDirectory: "GET /users",
+} as const;
+
+async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (res.status === 403) throw new ApiError("Your role isn't allowed to do this.", 403);
+  if (res.status === 404) throw new ApiError("This document no longer exists.", 404);
+  if (!res.ok) throw new ApiError(`The vault couldn't complete this (HTTP ${res.status}).`, res.status);
+  return (res.status === 204 ? undefined : await res.json()) as T;
+}
+
+/** DELETE /files/{fileId} — server checks role/ownership, removes the S3 object and record, writes FILE_DELETED. */
+export function deleteFile(fileId: string, userEmail: string, userRole: UserRole) {
+  return call<void>("DELETE", `/files/${encodeURIComponent(fileId)}?${new URLSearchParams({ userEmail, userRole })}`);
+}
+
+/**
+ * POST /files/{fileId}/replace-url — returns a presigned PUT for a *new* object key.
+ * The S3 trigger verifies the new object before re-pointing the record, so the
+ * existing content is never overwritten before the replacement is confirmed.
+ */
+export function requestReplaceUrl(fileId: string, input: { file: File; userEmail: string; userRole: UserRole }) {
+  return call<UploadTicket>("POST", `/files/${encodeURIComponent(fileId)}/replace-url`, {
+    fileName: input.file.name,
+    contentType: input.file.type || "application/octet-stream",
+    userEmail: input.userEmail,
+    userRole: input.userRole,
+  });
+}
+
+/** PATCH /files/{fileId} — updates classification / audit note, writes METADATA_UPDATED. */
+export function updateMetadata(fileId: string, patch: { classification: string; auditNote: string; userEmail: string; userRole: UserRole }) {
+  return call<VaultFile>("PATCH", `/files/${encodeURIComponent(fileId)}`, patch);
+}

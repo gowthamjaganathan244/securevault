@@ -26,10 +26,10 @@ export function PageToolbar({
   titleAs?: "h1" | "p";
 }) {
   return (
-    <div className={cn("z-20 border-b border-line bg-background/85 backdrop-blur-xl", sticky && "sticky top-0", className)}>
+    <div className={cn("z-20 border-b border-line bg-background/80 backdrop-blur-xl", sticky && "sticky top-0", className)}>
       <div className="flex min-h-14 items-center gap-x-3 px-4 py-2 sm:px-6">
         <div className="min-w-0 flex-1">
-          <Title className="truncate text-[16px] font-semibold tracking-[-0.015em] text-foreground">{title}</Title>
+          <Title className="truncate text-[18px] font-semibold tracking-[-0.02em] text-foreground">{title}</Title>
           {subtitle && <p className="truncate text-[12px] text-ink-3">{subtitle}</p>}
         </div>
         {actions && <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">{actions}</div>}

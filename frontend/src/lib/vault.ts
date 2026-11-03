@@ -173,6 +173,12 @@ export function describeAction(event: AuditEvent) {
       return "uploaded";
     case "UPLOAD_NOT_CONFIRMED":
       return "started an unfinished upload of";
+    case "FILE_DELETED":
+      return "deleted";
+    case "FILE_REPLACED":
+      return "replaced";
+    case "METADATA_UPDATED":
+      return "updated the details of";
     default:
       return event.action.toLowerCase().replace(/_/g, " ");
   }
@@ -182,6 +188,18 @@ export function describeAction(event: AuditEvent) {
 export function scopeEvents(events: AuditEvent[], role: UserRole, email: string) {
   if (role === "Admin" || role === "Auditor") return events;
   return events.filter((e) => e.userEmail === email);
+}
+
+/** Admins can manage any document; Users only their own. Auditors are read-only. */
+export function canManage(file: VaultFile, role: UserRole, email: string) {
+  if (role === "Admin") return true;
+  return role === "User" && !!email && file.uploadedBy === email;
+}
+
+/** Real signals only: uploads S3 hasn't confirmed, or documents with denied access attempts. */
+export function needsAttention(file: VaultFile, deniedFileIds: Set<string>) {
+  const s = uploadState(file);
+  return s === "awaiting" || s === "not-received" || deniedFileIds.has(file.fileId);
 }
 
 export function canDownload(role: UserRole) {

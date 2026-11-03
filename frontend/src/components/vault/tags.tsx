@@ -12,10 +12,10 @@ export const classificationStyle: Record<ClassificationLevel, { text: string; bg
 };
 
 export const classificationHex: Record<ClassificationLevel, string> = {
-  Public: "#34d399",
-  Internal: "#22d3ee",
-  Confidential: "#fbbf24",
-  Restricted: "#fb7185",
+  Public: "#62d1a4",
+  Internal: "#4ac5e5",
+  Confidential: "#edc06a",
+  Restricted: "#ec7894",
 };
 
 export function ClassificationTag({ level, className, compact }: { level: ClassificationLevel; className?: string; compact?: boolean }) {

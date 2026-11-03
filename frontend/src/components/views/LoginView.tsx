@@ -190,7 +190,7 @@ export function LoginView() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 50% at 18% 30%, rgba(59,130,246,0.14), transparent 70%), radial-gradient(40% 40% at 90% 90%, rgba(96,165,250,0.06), transparent 70%)",
+            "radial-gradient(60% 50% at 18% 30%, rgba(52,121,237,0.14), transparent 70%), radial-gradient(40% 40% at 90% 90%, rgba(139,185,255,0.06), transparent 70%)",
         }}
       />
       <div
@@ -496,7 +496,7 @@ function Field({ id, label, aside, children }: { id: string; label: string; asid
 }
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-line-strong bg-white/[0.03] px-3.5 text-[14.5px] text-foreground outline-none transition-[border-color,box-shadow,background-color] duration-[160ms] hover:border-white/15 focus:border-primary/60 focus:bg-white/[0.05] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] focus-visible:outline-none";
+  "h-11 w-full rounded-xl border border-line-strong bg-white/[0.03] px-3.5 text-[14.5px] text-foreground outline-none transition-[border-color,box-shadow,background-color] duration-[160ms] hover:border-white/15 focus:border-primary/60 focus:bg-white/[0.05] focus:shadow-[0_0_0_4px_rgba(52,121,237,0.18)] focus-visible:outline-none";
 
 function TextInput({
   value,
@@ -837,10 +837,10 @@ function VaultDial({ className }: { className?: string }) {
       </svg>
       <svg viewBox="0 0 260 260" className="absolute inset-0 size-full">
         <circle cx="130" cy="130" r="86" fill="#0e0e11" stroke="rgba(255,255,255,0.08)" />
-        <circle cx="130" cy="130" r="70" fill="none" stroke="rgba(59,130,246,0.25)" strokeDasharray="2 6" />
+        <circle cx="130" cy="130" r="70" fill="none" stroke="rgba(52,121,237,0.25)" strokeDasharray="2 6" />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="rounded-[22px] shadow-[0_0_60px_rgba(59,130,246,0.45)]">
+        <div className="rounded-[22px] shadow-[0_0_60px_rgba(52,121,237,0.45)]">
           <LogoMark className="size-16" />
         </div>
       </div>

@@ -50,7 +50,7 @@ export function VaultCore({
   const step = rings.length > 1 ? (outer - inner) / (rings.length - 1) : 0;
 
   return (
-    <figure className={cn("vault-core relative mx-auto w-full max-w-[440px] select-none", className)}>
+    <figure className={cn("vault-core relative mx-auto w-full max-w-[380px] select-none", className)}>
       <svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="block aspect-square w-full" aria-hidden>
         <defs>
           <radialGradient id={`${gid}-glow`}>

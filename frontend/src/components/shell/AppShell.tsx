@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { usePathname, useRouter } from "next/navigation";
 import { ShieldX } from "lucide-react";
 import { TopNav } from "./TopNav";
+import { DocumentActionsProvider } from "@/components/vault/DocumentActions";
 import { CommandPalette } from "./CommandPalette";
 import { PageToolbar } from "./PageToolbar";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -72,11 +73,13 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* Floating top navigation above a full-width document area. */}
         <div className="flex h-dvh flex-col bg-background">
           <TopNav />
-          <main id="main" className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <div key={pathname} className="h-full animate-page">
-              {canVisit(role, pathname) ? children : <NoAccess role={role} />}
-            </div>
-          </main>
+          <DocumentActionsProvider>
+            <main id="main" className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div key={pathname} className="h-full animate-page">
+                {canVisit(role, pathname) ? children : <NoAccess role={role} />}
+              </div>
+            </main>
+          </DocumentActionsProvider>
         </div>
         {paletteOpen && <CommandPalette onClose={() => setPaletteOpen(false)} />}
       </PaletteContext.Provider>

@@ -42,7 +42,7 @@ export function RowsSkeleton({ rows = 6 }: { rows?: number }) {
 }
 
 export function Panel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("relative rounded-xl border border-line bg-surface-1 hairline-top", className)} {...props} />;
+  return <div className={cn("relative rounded-2xl border border-line bg-surface-1 hairline-top", className)} {...props} />;
 }
 
 export function Notice({
@@ -135,7 +135,7 @@ export function Segmented<T extends string>({
     <div
       role="radiogroup"
       aria-label={label}
-      className={cn("inline-flex shrink-0 items-center rounded-lg border border-line bg-white/[0.03] p-0.5", className)}
+      className={cn("inline-flex shrink-0 items-center gap-0.5 rounded-[11px] border border-line-strong bg-surface-3 p-[3px]", className)}
     >
       {options.map((o, i) => {
         const active = o.value === value;
@@ -153,10 +153,10 @@ export function Segmented<T extends string>({
             onKeyDown={(e) => onKey(e, i)}
             onClick={() => onChange(o.value)}
             className={cn(
-              "inline-flex items-center justify-center gap-1.5 rounded-md font-medium transition-[background-color,color,box-shadow] duration-[160ms] [&_svg]:size-3.5",
+              "inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-[background-color,color,box-shadow] duration-[160ms] [&_svg]:size-3.5",
               size === "sm" ? "h-6 px-2 text-[12px]" : "h-7 px-2.5 text-[12.5px]",
               active
-                ? "bg-surface-4 text-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_1px_2px_rgba(0,0,0,0.4)]"
+                ? "bg-select-strong text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                 : "text-ink-3 hover:text-foreground",
             )}
           >
@@ -186,7 +186,7 @@ export function SearchField({
   return (
     <label className={cn("group relative flex items-center", className)}>
       <span className="sr-only">{label}</span>
-      <svg aria-hidden viewBox="0 0 16 16" className="pointer-events-none absolute left-2.5 size-3.5 text-ink-3">
+      <svg aria-hidden viewBox="0 0 16 16" className="pointer-events-none absolute left-3 size-3.5 text-ink-3">
         <circle cx="7" cy="7" r="4.75" fill="none" stroke="currentColor" strokeWidth="1.5" />
         <path d="m10.5 10.5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
@@ -196,7 +196,7 @@ export function SearchField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-8 w-full rounded-lg border border-line bg-white/[0.03] pl-8 pr-3 text-[13px] text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-[160ms] hover:border-line-strong focus:border-primary/50 focus:bg-white/[0.05] focus:shadow-[0_0_0_3px_rgba(59,130,246,0.18)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
+        className="h-9 w-full rounded-[10px] border border-line-strong bg-surface-1 pl-8 pr-3 text-[13px] text-foreground outline-none transition-[border-color,background-color,box-shadow] duration-[160ms] hover:border-[#465c79] focus:border-primary/60 focus:shadow-[0_0_0_3px_rgba(52,121,237,0.2)] focus-visible:outline-none [&::-webkit-search-cancel-button]:hidden"
       />
     </label>
   );

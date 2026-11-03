@@ -6,17 +6,17 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "plain";
 type Size = "sm" | "md" | "lg" | "icon" | "icon-sm";
 
 const base =
-  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg font-medium select-none " +
+  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-[10px] font-medium select-none " +
   "transition-[background-color,border-color,color,box-shadow,transform,opacity] duration-[160ms] ease-[var(--ease-out-soft)] " +
   "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0";
 
 const variants: Record<Variant, string> = {
   primary:
-    "bg-primary text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_1px_2px_rgba(0,0,0,0.4)] hover:bg-[#4b8df7]",
+    "border border-[#5a91f5] bg-primary text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(0,0,0,0.4)] hover:bg-[#4386f7]",
   secondary:
-    "bg-surface-3 text-foreground border border-line-strong hover:bg-surface-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+    "bg-surface-3 text-foreground border border-line-strong hover:bg-surface-4 hover:border-[#465c79] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
   ghost: "text-ink-2 hover:text-foreground hover:bg-white/[0.06]",
-  danger: "bg-danger/10 text-danger border border-danger/25 hover:bg-danger/15",
+  danger: "bg-surface-3 text-danger border border-[#693f4e] hover:bg-danger/10",
   plain: "text-primary-hi hover:text-white",
 };
 

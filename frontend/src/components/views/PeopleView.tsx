@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState, type ReactNode } from "react";
 import { BadgeCheck, Check, CircleAlert, ExternalLink, Info, Minus, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { pendingEndpoints } from "@/lib/api";
+import { PendingBadge } from "@/components/ui/Dialog";
 import { useSession } from "@/lib/session";
 import { useAudit, useFiles } from "@/lib/store";
 import { formatFull, relativeTime } from "@/lib/format";
@@ -125,6 +127,31 @@ export function PeopleView() {
                 {amr?.length ? amr.join(", ") : <span className="text-ink-3">Not reported in the token — configured in Cognito</span>}
               </Fact>
             </dl>
+          </Panel>
+        </section>
+
+        {/* Account directory — designed, awaiting the directory API */}
+        <section aria-labelledby="directory">
+          <SectionLabel action={<PendingBadge />}>
+            <span id="directory">Directory</span>
+          </SectionLabel>
+          <Panel className="mt-2.5 overflow-hidden">
+            <div className="hidden grid-cols-[minmax(0,1.6fr)_90px_110px_100px] gap-3 border-b border-line px-4 py-2 text-[11.5px] font-medium text-ink-3 sm:grid">
+              <span>Account</span>
+              <span>Role</span>
+              <span>MFA</span>
+              <span>Status</span>
+            </div>
+            <div className="flex flex-col items-center px-6 py-8 text-center">
+              <span className="flex size-10 items-center justify-center rounded-xl border border-line-strong bg-surface-3 text-ink-2">
+                <UsersRound className="size-5" aria-hidden />
+              </span>
+              <p className="mt-3 text-[14px] font-medium">Account directory not connected</p>
+              <p className="mt-1 max-w-md text-[12.5px] text-ink-3">
+                Every Cognito account with its group, MFA setting and enabled/disabled status will list here once{" "}
+                <code className="font-mono text-ink-2">{pendingEndpoints.userDirectory}</code> is available. No accounts are shown until then.
+              </p>
+            </div>
           </Panel>
         </section>
 

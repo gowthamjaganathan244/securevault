@@ -155,9 +155,9 @@ export function DeskView() {
         <div
           aria-hidden
           className="pointer-events-none absolute right-[-10%] top-[-30%] h-[620px] w-[620px] rounded-full opacity-70 max-lg:right-1/2 max-lg:translate-x-1/2"
-          style={{ background: "radial-gradient(closest-side, rgba(59,130,246,0.16), transparent)" }}
+          style={{ background: "radial-gradient(closest-side, rgba(52,121,237,0.16), transparent)" }}
         />
-        <div className="relative mx-auto grid w-full max-w-[1180px] items-center gap-4 px-5 pb-6 pt-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:gap-10 lg:pb-10 lg:pt-14">
+        <div className="relative mx-auto grid w-full max-w-[1180px] items-center gap-4 px-5 pb-6 pt-8 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)] lg:gap-10 lg:pb-8 lg:pt-10">
           <div className="animate-rise">
             <p className="flex items-center gap-2 text-[12.5px] text-ink-3">
               <span>{today}</span>
@@ -166,7 +166,7 @@ export function DeskView() {
                 {greeting()}, <span className="capitalize text-ink-2">{displayName}</span>
               </span>
             </p>
-            <h1 className="mt-4 text-[31px] font-semibold leading-[1.05] tracking-[-0.04em] text-foreground sm:text-[44px] xl:text-[52px]">
+            <h1 className="mt-3 text-[30px] font-semibold leading-[1.06] tracking-[-0.035em] text-foreground sm:text-[40px] xl:text-[46px]">
               {coreLoading ? (
                 <>
                   <Skeleton className="h-[0.9em] w-[70%]" />
@@ -207,7 +207,7 @@ export function DeskView() {
 
           <div className="animate-rise [animation-delay:90ms]">
             {coreLoading ? (
-              <div className="mx-auto aspect-square w-full max-w-[440px] animate-pulse rounded-full border border-white/[0.04] bg-white/[0.015]" />
+              <div className="mx-auto aspect-square w-full max-w-[380px] animate-pulse rounded-full border border-white/[0.04] bg-white/[0.015]" />
             ) : (
               <VaultCore
                 rings={rings}
@@ -234,7 +234,7 @@ export function DeskView() {
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-[1180px] space-y-12 px-5 pb-14 sm:px-8">
+      <div className="mx-auto w-full max-w-[1180px] space-y-10 px-5 pb-12 sm:px-8">
         {/* ── Filmstrip ─────────────────────────────────── */}
         {canBrowse && (
           <section aria-labelledby="strip-title" className="reveal">
@@ -429,7 +429,7 @@ function DocCard({ file, meta, mine }: { file: VaultFile; meta: string; mine: bo
   return (
     <Link href={`/files?doc=${encodeURIComponent(file.fileId)}`} className="group block rounded-2xl outline-none">
       <div
-        className="relative flex h-[148px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.06] bg-surface-1 transition-[border-color,transform,box-shadow] duration-[220ms] ease-[var(--ease-out-soft)] group-hover:-translate-y-1 group-hover:border-white/[0.12] group-hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] group-focus-visible:shadow-[0_0_0_2px_rgba(96,165,250,0.8)]"
+        className="relative flex h-[148px] items-center justify-center overflow-hidden rounded-2xl border border-white/[0.06] bg-surface-1 transition-[border-color,transform,box-shadow] duration-[220ms] ease-[var(--ease-out-soft)] group-hover:-translate-y-1 group-hover:border-white/[0.12] group-hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)] group-focus-visible:shadow-[0_0_0_2px_rgba(139,185,255,0.8)]"
         style={{ backgroundImage: `radial-gradient(120% 90% at 50% 0%, ${tint}26, transparent 65%)` }}
       >
         <span

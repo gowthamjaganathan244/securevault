@@ -327,7 +327,7 @@ export function UploadStudio() {
                 onChange={(e) => setNote(e.target.value)}
                 maxLength={280}
                 placeholder="Why is this being uploaded?"
-                className="mt-1.5 h-9 w-full rounded-lg border border-line bg-white/[0.03] px-3 text-[13px] outline-none transition-[border-color,box-shadow] duration-[160ms] hover:border-line-strong focus:border-primary/50 focus:shadow-[0_0_0_3px_rgba(59,130,246,0.18)] focus-visible:outline-none"
+                className="mt-1.5 h-9 w-full rounded-lg border border-line bg-white/[0.03] px-3 text-[13px] outline-none transition-[border-color,box-shadow] duration-[160ms] hover:border-line-strong focus:border-primary/50 focus:shadow-[0_0_0_3px_rgba(52,121,237,0.18)] focus-visible:outline-none"
               />
               <span className="mt-1 block text-[11.5px] text-ink-3">Stored with the document&apos;s metadata.</span>
             </label>

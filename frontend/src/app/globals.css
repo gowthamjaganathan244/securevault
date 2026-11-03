@@ -6,33 +6,37 @@
  * every surface below is a step on the same neutral ramp.
  */
 @theme {
-  --color-background: #09090b;
-  --color-foreground: #fafafa;
+  /* SecureVault design system — cool charcoal surfaces (from the approved Explorer), one blue. */
+  --color-background: #090b10;
+  --color-foreground: #f4f6fb;
 
-  --color-surface-1: #0e0e11;
-  --color-surface-2: #131317;
-  --color-surface-3: #1a1a1f;
-  --color-surface-4: #222228;
+  --color-surface-1: #121720;
+  --color-surface-2: #171d28;
+  --color-surface-3: #1d2533;
+  --color-surface-4: #253044;
 
-  --color-line: rgba(255, 255, 255, 0.06);
-  --color-line-strong: rgba(255, 255, 255, 0.1);
+  --color-line: #252e3c;
+  --color-line-strong: #334054;
 
-  --color-ink-2: #a1a1aa;
-  --color-ink-3: #8b8b95;
+  --color-ink-2: #aab7ca;
+  --color-ink-3: #8d9db3;
 
-  --color-primary: #3b82f6;
-  --color-primary-hi: #60a5fa;
+  --color-primary: #3479ed;
+  --color-primary-hi: #8bb9ff;
   --color-primary-foreground: #ffffff;
-  --color-muted-foreground: #a1a1aa;
+  --color-muted-foreground: #aab7ca;
+  /* Selected / active fills */
+  --color-select: #1b2a40;
+  --color-select-strong: #2b456d;
 
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-danger: #fb7185;
+  --color-success: #62d1a4;
+  --color-warning: #edc06a;
+  --color-danger: #ec7894;
 
-  --color-public: #34d399;
-  --color-internal: #22d3ee;
-  --color-confidential: #fbbf24;
-  --color-restricted: #fb7185;
+  --color-public: #62d1a4;
+  --color-internal: #4ac5e5;
+  --color-confidential: #edc06a;
+  --color-restricted: #ec7894;
 
   --font-sans: var(--font-inter), ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
@@ -103,7 +107,7 @@
   }
 
   ::selection {
-    background: rgba(59, 130, 246, 0.35);
+    background: rgba(52, 121, 237, 0.4);
   }
 
   /* One focus language across the app: a calm blue halo, keyboard only. */
@@ -136,14 +140,19 @@
 @layer utilities {
   /* Liquid glass — reserved for overlays and floating panels. */
   .glass {
-    background: rgba(20, 20, 25, 0.88);
+    background: rgba(19, 25, 35, 0.86);
     backdrop-filter: blur(28px) saturate(170%);
     -webkit-backdrop-filter: blur(28px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(139, 185, 255, 0.12);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
       0 24px 64px -12px rgba(0, 0, 0, 0.6),
       0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Glass that stays legible over busy content (menus, dialogs, sheets). */
+  .glass-solid {
+    background: rgba(22, 28, 39, 0.97) !important;
   }
 
   .hairline-top {
@@ -165,6 +174,41 @@
     display: none;
   }
 }
+
+/* Explorer document glyph (approved reference): bordered sheet, folded corner, type label. */
+.sv-glyph {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 46px;
+  height: 59px;
+  padding: 0 1px 10px;
+  border: 2px solid #6588bb;
+  border-radius: 6px 12px 6px 6px;
+  background: linear-gradient(145deg, #304460, #1a2636);
+}
+.sv-glyph::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 14px;
+  height: 14px;
+  border-left: 2px solid #6588bb;
+  border-bottom: 2px solid #6588bb;
+  background: #27364c;
+  border-radius: 0 9px 0 5px;
+}
+.sv-glyph span {
+  font-size: 10px;
+  font-weight: 740;
+  letter-spacing: 0.4px;
+  color: #a9d0ff;
+}
+.sv-glyph[data-kind="pdf"] span { color: #ffa2ab; }
+.sv-glyph[data-kind="doc"] span { color: #91baff; }
+.sv-glyph[data-kind="sheet"] span { color: #8fe3b8; }
 
 /* Film grain — a static, tiled noise layer above content and below overlays. */
 body::after {

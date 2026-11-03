@@ -11,6 +11,9 @@ import {
   Link2,
   Loader2,
   RotateCw,
+  Replace,
+  FilePen,
+  Trash2,
   Maximize2,
   ShieldCheck,
   ShieldX,
@@ -22,6 +25,7 @@ import { useAudit } from "@/lib/store";
 import { formatBytes, formatFinderDate, formatFull, relativeTime } from "@/lib/format";
 import {
   canDownload,
+  canManage,
   classificationCopy,
   describeAction,
   fileKind,
@@ -36,8 +40,9 @@ import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/primitives";
 import { ClassificationTag, FileGlyph, UploadStatus, classificationHex, classificationStyle } from "./tags";
 import { useDownload } from "./useDownload";
-import { handOffRetry } from "@/lib/handoff";
-import { useRouter } from "next/navigation";
+import { useDocumentActions } from "./DocumentActions";
+import { integrations, pendingEndpoints } from "@/lib/api";
+import { PendingBadge } from "@/components/ui/Dialog";
 
 export function DocumentPassport({
   file,
@@ -51,7 +56,6 @@ export function DocumentPassport({
   const { role, email } = useSession();
   const { events, loading: auditLoading } = useAudit();
   const { download, busyId } = useDownload();
-  const router = useRouter();
   const [copied, setCopied] = useState<"id" | "link" | null>(null);
 
   const state = uploadState(file);
@@ -63,7 +67,9 @@ export function DocumentPassport({
   const downloadable = downloadAllowed && state === "stored";
   const isOwner = !!email && file.uploadedBy === email;
   // An upload S3 never confirmed can be retried by its owner or an Admin (creates a new verified record).
-  const canRetry = downloadAllowed && state === "not-received" && (isOwner || role === "Admin");
+  const manage = canManage(file, role, email);
+  const canRetry = downloadAllowed && state === "not-received" && manage;
+  const actions = useDocumentActions();
 
   const copy = async (what: "id" | "link") => {
     const text = what === "id" ? file.fileId : `${window.location.origin}/files/${file.fileId}`;
@@ -139,8 +145,7 @@ export function DocumentPassport({
               variant="primary"
               className="flex-1"
               onClick={() => {
-                handOffRetry({ fileId: file.fileId, fileName: file.fileName, classification: file.classification, auditNote: file.auditNote });
-                router.push("/upload");
+                actions.retry(file);
               }}
               title="Upload this document again to create a verified copy"
             >
@@ -181,6 +186,34 @@ export function DocumentPassport({
       </header>
 
       <div className="flex-1 space-y-px border-t border-line">
+        <Section title="Actions">
+          {manage ? (
+            <div className="grid grid-cols-2 gap-1.5">
+              <ActionTile
+                icon={<Replace />}
+                label="Replace file"
+                hint={state === "stored" ? "Keep ID & history" : "After S3 confirms"}
+                pending={!integrations.replaceFile}
+                disabled={state !== "stored"}
+                onClick={() => actions.open("replace", file)}
+              />
+              <ActionTile icon={<FilePen />} label="Edit details" hint="Privacy level & note" pending={!integrations.updateMetadata} onClick={() => actions.open("edit", file)} />
+              <ActionTile
+                icon={<RotateCw />}
+                label="Re-upload"
+                hint={state === "not-received" ? "Creates a new record" : "Only for unfinished uploads"}
+                disabled={state !== "not-received"}
+                onClick={() => actions.retry(file)}
+              />
+              <ActionTile icon={<Trash2 />} label="Delete" hint="Permanent" danger pending={!integrations.deleteFile} onClick={() => actions.open("delete", file)} />
+            </div>
+          ) : (
+            <p className="text-[12.5px] text-ink-3">
+              Only an Admin or the document&apos;s owner can replace, edit or delete it. You&apos;re signed in as {role}.
+            </p>
+          )}
+        </Section>
+
         <Section title="Storage">
           <p className="mb-3 flex items-start gap-2 text-[12.5px] text-ink-2">
             {state === "stored" ? (
@@ -263,9 +296,26 @@ export function DocumentPassport({
             </Allowed>
           </ul>
           <p className="mt-2.5 text-[11.5px] text-ink-3">
-            Signed in as <span className="text-ink-2">{role}</span>. Delete, replace, metadata editing and version history need endpoints the
-            vault API doesn&apos;t provide yet, so they aren&apos;t offered.
+            Signed in as <span className="text-ink-2">{role}</span>. Actions marked “Pending API” are designed but not connected to the vault
+            yet — they never change anything.
           </p>
+        </Section>
+
+        <Section title="Version history">
+          <ol className="space-y-2 text-[12.5px]">
+            <li className="flex items-center gap-2.5">
+              <span className="size-2 shrink-0 rounded-full bg-primary-hi" aria-hidden />
+              <span className="flex-1 text-ink-2">
+                Current version · {formatBytes(file.objectSize)}
+                {file.uploadedAt && <span className="text-ink-3"> · {formatFinderDate(file.uploadedAt)}</span>}
+              </span>
+            </li>
+          </ol>
+          {!integrations.versionHistory && (
+            <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-3">
+              <PendingBadge /> Earlier versions appear here once <code className="font-mono">{pendingEndpoints.versionHistory}</code> exists.
+            </p>
+          )}
         </Section>
 
         <Section title="Access history" last>
@@ -310,6 +360,43 @@ export function DocumentPassport({
         </Section>
       </div>
     </article>
+  );
+}
+
+function ActionTile({
+  icon,
+  label,
+  hint,
+  onClick,
+  danger,
+  pending,
+  disabled,
+}: {
+  icon: ReactNode;
+  label: string;
+  hint: string;
+  onClick: () => void;
+  danger?: boolean;
+  pending?: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        "flex min-h-[58px] flex-col items-start justify-center gap-0.5 rounded-xl border px-3 py-2 text-left transition-[background-color,border-color] duration-[140ms] disabled:cursor-not-allowed disabled:opacity-45 [&_svg]:size-3.5",
+        danger ? "border-danger/25 bg-danger/[0.05] hover:bg-danger/[0.1]" : "border-line bg-white/[0.02] hover:border-line-strong hover:bg-white/[0.05]",
+      )}
+    >
+      <span className={cn("flex w-full items-center gap-1.5 text-[12.5px] font-medium", danger ? "text-danger" : "text-foreground")}>
+        {icon}
+        <span className="flex-1">{label}</span>
+        {pending && <PendingBadge />}
+      </span>
+      <span className="text-[11px] text-ink-3">{hint}</span>
+    </button>
   );
 }
 

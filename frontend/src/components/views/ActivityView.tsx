@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowUp, ChevronDown, CircleAlert, CircleCheck, Clock, Download, History, Info, RotateCw, SearchX, ShieldX } from "lucide-react";
+import { ArrowUp, ChevronDown, FilePen, Replace, Trash2, CircleAlert, CircleCheck, Clock, Download, History, Info, RotateCw, SearchX, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { useAudit, useFiles } from "@/lib/store";
@@ -188,8 +188,18 @@ export function ActivityView() {
             <Info className="mt-0.5 size-3.5 shrink-0" />
             <span>
               Access events come from the vault&apos;s audit log; uploads come from the timestamps recorded on each document
-              {oversight ? "" : " (yours only)"}. Sign-ins aren&apos;t recorded, and the vault doesn&apos;t support deleting or replacing files, so
-              those events can&apos;t appear.
+              {oversight ? "" : " (yours only)"}. Sign-ins aren&apos;t recorded.
+              <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                {Object.entries(LIFECYCLE).map(([k, v]) => (
+                  <span key={k} className="inline-flex items-center gap-1.5">
+                    <span className={cn("flex size-4 items-center justify-center rounded-full", v.cls)} aria-hidden>
+                      <v.icon className="size-2.5" />
+                    </span>
+                    {v.label}
+                  </span>
+                ))}
+                <span className="text-ink-3">— shown here once the API records these events.</span>
+              </span>
             </span>
           </p>
         )}
@@ -275,6 +285,13 @@ function Timeline({ events, me, linkFiles }: { events: AuditEvent[]; me: string;
   );
 }
 
+/** Visual identity per event type — lifecycle events are ready for when the API records them. */
+const LIFECYCLE: Record<string, { icon: typeof Trash2; cls: string; label: string }> = {
+  FILE_DELETED: { icon: Trash2, cls: "bg-white/10 text-ink-2", label: "Deleted" },
+  FILE_REPLACED: { icon: Replace, cls: "bg-primary/15 text-primary-hi", label: "Replaced" },
+  METADATA_UPDATED: { icon: FilePen, cls: "bg-[#a78bfa]/15 text-[#c4b5fd]", label: "Details changed" },
+};
+
 /** One audit event as a sentence: actor · action · document, with the outcome as the node. */
 export function ActivityLine({
   event,
@@ -292,6 +309,7 @@ export function ActivityLine({
   const [open, setOpen] = useState(false);
   const denied = isDenied(event);
   const incomplete = isIncomplete(event);
+  const lifecycle = LIFECYCLE[event.action];
   const actor = !hasRealActor(event) ? "An unidentified request" : event.userEmail === me ? "You" : event.userEmail;
   const docName = hasRealFile(event) ? event.fileName || "a document" : "an unspecified document";
 
@@ -301,11 +319,11 @@ export function ActivityLine({
         className={cn(
           "relative z-10 mt-0.5 flex shrink-0 items-center justify-center rounded-full",
           compact ? "size-5" : "size-6",
-          denied ? "bg-danger/15 text-danger" : incomplete ? "bg-warning/15 text-warning" : event.source === "records" ? "bg-primary/15 text-primary-hi" : "bg-success/15 text-success",
+          lifecycle ? lifecycle.cls : denied ? "bg-danger/15 text-danger" : incomplete ? "bg-warning/15 text-warning" : event.source === "records" ? "bg-primary/15 text-primary-hi" : "bg-success/15 text-success",
         )}
       >
-        {denied ? <ShieldX className="size-3" /> : incomplete ? <Clock className="size-3" /> : event.source === "records" ? <ArrowUp className="size-3" /> : <CircleCheck className="size-3" />}
-        <span className="sr-only">{denied ? "Denied" : incomplete ? "Incomplete" : event.source === "records" ? "Uploaded" : "Allowed"}</span>
+        {lifecycle ? <lifecycle.icon className="size-3" /> : denied ? <ShieldX className="size-3" /> : incomplete ? <Clock className="size-3" /> : event.source === "records" ? <ArrowUp className="size-3" /> : <CircleCheck className="size-3" />}
+        <span className="sr-only">{lifecycle ? lifecycle.label : denied ? "Denied" : incomplete ? "Incomplete" : event.source === "records" ? "Uploaded" : "Allowed"}</span>
       </span>
       <span className="min-w-0 flex-1">
         <span className={cn("block leading-snug text-ink-2", compact ? "text-[12.5px]" : "text-[13.5px]")}>

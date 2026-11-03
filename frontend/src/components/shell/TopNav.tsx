@@ -43,7 +43,7 @@ export function TopNav() {
 
   return (
     <header className="relative z-40 shrink-0 px-2 pt-2 sm:px-3">
-      <div className="glass flex h-12 items-center gap-2 rounded-2xl px-2 !bg-[rgba(18,18,23,0.86)]">
+      <div className="glass flex h-12 items-center gap-2 rounded-2xl px-2">
         <Link href="/dashboard" className="flex shrink-0 items-center gap-2 rounded-xl px-1.5 py-1" aria-label="SecureVault — Workspace">
           <LogoMark className="size-7" />
           <span className="hidden text-[14px] font-semibold tracking-[-0.01em] xl:inline">SecureVault</span>
@@ -63,16 +63,13 @@ export function TopNav() {
                     aria-current={active ? "page" : undefined}
                     title={d.label}
                     className={cn(
-                      "relative flex h-9 items-center gap-2 rounded-xl px-3 text-[13px] transition-[background-color,color] duration-[160ms]",
-                      active ? "bg-white/[0.07] font-medium text-foreground" : "text-ink-2 hover:bg-white/[0.04] hover:text-foreground",
+                      "relative flex h-9 items-center gap-2 rounded-[11px] px-3 text-[13px] transition-[background-color,color] duration-[160ms]",
+                      active ? "bg-select-strong font-medium text-white" : "text-ink-2 hover:bg-white/[0.05] hover:text-foreground",
                     )}
                   >
                     <Icon className={cn("size-4 shrink-0", active ? "text-primary-hi" : "text-ink-3")} strokeWidth={1.9} aria-hidden />
                     <span className="hidden lg:inline">{d.label}</span>
                     <span className="sr-only lg:hidden">{d.label}</span>
-                    {active && (
-                      <span aria-hidden className="absolute inset-x-3 -bottom-[5px] h-[2px] rounded-full bg-primary-hi shadow-[0_0_8px_rgba(96,165,250,0.7)]" />
-                    )}
                   </Link>
                 </li>
               );
@@ -162,7 +159,7 @@ function NavSheet({ items, pathname, onClose }: { items: Destination[]; pathname
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="glass absolute inset-x-0 bottom-0 max-h-[85dvh] animate-sheet-up overflow-y-auto rounded-t-[22px] p-3 pb-[calc(12px+env(safe-area-inset-bottom))] !bg-[rgba(20,20,25,0.96)]"
+        className="glass absolute inset-x-0 bottom-0 max-h-[85dvh] animate-sheet-up overflow-y-auto rounded-t-[22px] p-3 pb-[calc(12px+env(safe-area-inset-bottom))] glass-solid"
       >
         <span aria-hidden className="mx-auto mb-2 block h-1 w-9 rounded-full bg-white/20" />
         <p id={titleId} className="px-2.5 pb-2 pt-1 text-[14px] font-semibold">
