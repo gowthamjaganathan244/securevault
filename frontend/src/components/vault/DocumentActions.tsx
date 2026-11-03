@@ -4,9 +4,8 @@ import { createContext, useCallback, useContext, useMemo, useRef, useState, type
 import { useRouter } from "next/navigation";
 import { ArrowRight, CircleAlert, FilePen, Loader2, Replace, Trash2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { deleteFile, integrations, pendingEndpoints, putToS3, requestReplaceUrl, updateMetadata } from "@/lib/api";
-import { useSession } from "@/lib/session";
-import { filesResource } from "@/lib/store";
+import { deleteFile, getVersions, integrations, pendingEndpoints, putToS3, requestReplaceUrl, updateMetadata } from "@/lib/api";
+import { auditResource, filesResource } from "@/lib/store";
 import { formatBytes } from "@/lib/format";
 import { handOffRetry } from "@/lib/handoff";
 import { classificationCopy, classifications, fileKind, kindLabel, uploadState, validateUpload, ACCEPTED_EXTENSIONS } from "@/lib/vault";
@@ -70,15 +69,18 @@ function FileSummary({ file, label }: { file: { name: string; type?: string; siz
   );
 }
 
+type Outcome = { title: string; body?: string; tone?: "success" | "info" };
+
 function useRun(onDone: () => void) {
   const [phase, setPhase] = useState<Phase>({ k: "idle" });
   const toast = useToast();
-  const run = async (fn: () => Promise<void>, success: string) => {
+  // `fn` may return the backend's own wording; the list and audit log are refetched after every change.
+  const run = async (fn: () => Promise<Outcome | void>, success: string) => {
     setPhase({ k: "working" });
     try {
-      await fn();
-      await filesResource.load();
-      toast({ tone: "success", title: success });
+      const outcome = await fn();
+      await Promise.all([filesResource.load(), auditResource.load()]);
+      toast({ tone: outcome?.tone ?? "success", title: outcome?.title ?? success, body: outcome?.body });
       onDone();
     } catch (err) {
       setPhase({ k: "error", message: err instanceof Error ? err.message : "Something went wrong." });
@@ -87,10 +89,34 @@ function useRun(onDone: () => void) {
   return { phase, run };
 }
 
+/**
+ * Replacement is confirmed asynchronously (S3 → EventBridge). We only report
+ * success once the record's active key is the new one, or the current version
+ * is the new file — never just because the PUT returned 200.
+ */
+async function waitForReplacement(file: VaultFile, newKey: string, newName: string, timeoutMs = 60_000) {
+  const started = Date.now();
+  let delay = 1500;
+  while (Date.now() - started < timeoutMs) {
+    await new Promise((r) => setTimeout(r, delay));
+    delay = Math.min(delay * 1.4, 5000);
+    const list = await filesResource.load();
+    const rec = list?.find((f) => f.fileId === file.fileId);
+    if (rec && rec.s3Key && rec.s3Key === newKey) return true;
+    try {
+      const { versions } = await getVersions(file.fileId);
+      const current = versions.find((v) => v.isCurrent);
+      if (current && current.fileName === newName && versions.length > 1) return true;
+    } catch {
+      /* keep polling */
+    }
+  }
+  return false;
+}
+
 /* ── Delete ─────────────────────────────────────────────── */
 
 function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void }) {
-  const { email, role } = useSession();
   const { phase, run } = useRun(onClose);
   const connected = integrations.deleteFile;
   const working = phase.k === "working";
@@ -100,7 +126,7 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
       tone="danger"
       icon={<Trash2 />}
       title="Delete this document?"
-      description="This permanently removes it from the vault."
+      description="This removes it from the active vault for everyone."
       onClose={onClose}
       busy={working}
       footer={
@@ -112,7 +138,12 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
             size="lg"
             className="bg-danger text-white hover:bg-[#f43f5e]"
             disabled={!connected || working}
-            onClick={() => run(() => deleteFile(file.fileId, email, role), `Deleted ${file.fileName}`)}
+            onClick={() =>
+              run(async () => {
+                const res = await deleteFile(file.fileId);
+                return { title: res.message ?? "Deleted from active vault", body: file.fileName };
+              }, `Deleted ${file.fileName}`)
+            }
           >
             {working ? <Loader2 className="animate-spin" /> : <Trash2 />}
             {working ? "Deleting…" : "Confirm delete"}
@@ -124,15 +155,15 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
       <ul className="mt-4 space-y-1.5 text-[12.5px] text-ink-2">
         <li className="flex gap-2">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-danger" aria-hidden />
-          The file is removed from the private S3 bucket and can&apos;t be downloaded again.
+          It disappears from Explorer and can no longer be downloaded or replaced from the vault.
         </li>
         <li className="flex gap-2">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-danger" aria-hidden />
-          Its record disappears from Explorer for everyone.
+          S3 Versioning may still retain earlier versions of the file, so this isn&apos;t guaranteed permanent erasure.
         </li>
         <li className="flex gap-2">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-ink-3" aria-hidden />
-          The audit trail keeps a record of the deletion and past access.
+          The deletion and the document&apos;s past access stay in the audit log.
         </li>
       </ul>
       {phase.k === "error" && (
@@ -148,9 +179,9 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
 /* ── Replace ────────────────────────────────────────────── */
 
 function ReplaceDialog({ file, onClose }: { file: VaultFile; onClose: () => void }) {
-  const { email, role } = useSession();
   const { phase, run } = useRun(onClose);
   const [next, setNext] = useState<File | null>(null);
+  const [step, setStep] = useState("");
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const connected = integrations.replaceFile;
@@ -176,13 +207,24 @@ function ReplaceDialog({ file, onClose }: { file: VaultFile; onClose: () => void
             onClick={() =>
               next &&
               run(async () => {
-                const ticket = await requestReplaceUrl(file.fileId, { file: next, userEmail: email, userRole: role });
-                await putToS3(ticket.uploadUrl, next, () => {});
-              }, `Replacement uploaded — waiting for S3 to confirm`)
+                setStep("Requesting a replacement link…");
+                const ticket = await requestReplaceUrl(file.fileId, next);
+                setStep("Uploading to S3…");
+                await putToS3(ticket.uploadUrl, next, (l, t) => setStep(`Uploading to S3… ${Math.round((l / Math.max(t, 1)) * 100)}%`));
+                setStep("Waiting for S3 to confirm the new version…");
+                const confirmed = await waitForReplacement(file, ticket.s3Key, next.name);
+                return confirmed
+                  ? { title: "Replacement confirmed", body: `${next.name} is now the current version.` }
+                  : {
+                      tone: "info",
+                      title: "Uploaded — awaiting S3 confirmation",
+                      body: "S3 hasn't confirmed the new version yet. It becomes current once confirmed; check Version history shortly.",
+                    };
+              }, "Replacement confirmed")
             }
           >
             {working ? <Loader2 className="animate-spin" /> : <Replace />}
-            {working ? "Uploading…" : "Confirm replacement"}
+            {working ? "Replacing…" : "Confirm replacement"}
           </Button>
         </>
       }
@@ -244,6 +286,11 @@ function ReplaceDialog({ file, onClose }: { file: VaultFile; onClose: () => void
         Safe by design: the new file is uploaded beside the original and only becomes current after S3 confirms it. The original is
         never overwritten before then.
       </p>
+      {working && step && (
+        <p className="mt-3 flex items-center gap-2 text-[12.5px] text-ink-2" role="status">
+          <Loader2 className="size-3.5 animate-spin" /> {step}
+        </p>
+      )}
       {phase.k === "error" && (
         <Notice tone="danger" icon={<CircleAlert />} className="mt-4">
           {phase.message}
@@ -257,7 +304,6 @@ function ReplaceDialog({ file, onClose }: { file: VaultFile; onClose: () => void
 /* ── Edit metadata ──────────────────────────────────────── */
 
 function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () => void }) {
-  const { email, role } = useSession();
   const { phase, run } = useRun(onClose);
   const [level, setLevel] = useState<ClassificationLevel>(file.classification);
   const [note, setNote] = useState(file.auditNote ?? "");
@@ -285,7 +331,10 @@ function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () =>
             disabled={!connected || !changed || tooLong || working}
             onClick={() =>
               run(async () => {
-                await updateMetadata(file.fileId, { classification: level, auditNote: note.trim(), userEmail: email, userRole: role });
+                const patch: { classification?: string; auditNote?: string } = {};
+                if (level !== file.classification) patch.classification = level;
+                if (note.trim() !== (file.auditNote ?? "").trim()) patch.auditNote = note.trim();
+                await updateMetadata(file.fileId, patch);
               }, "Details saved")
             }
           >
@@ -341,7 +390,7 @@ function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () =>
         />
       </label>
       <p className="mt-2 text-[11.5px] text-ink-3">
-        Requires Admin, or the document&apos;s owner. The change is recorded in the audit trail.
+        Requires Admin, or the document&apos;s owner. Only Admins can lower a privacy level. The change is recorded in the audit log.
         {uploadState(file) !== "stored" && " This upload isn't confirmed by S3 yet."}
       </p>
       {phase.k === "error" && (

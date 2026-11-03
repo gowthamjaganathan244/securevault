@@ -41,7 +41,9 @@ import { Skeleton } from "@/components/ui/primitives";
 import { ClassificationTag, FileGlyph, UploadStatus, classificationHex, classificationStyle } from "./tags";
 import { useDownload } from "./useDownload";
 import { useDocumentActions } from "./DocumentActions";
-import { integrations, pendingEndpoints } from "@/lib/api";
+import { VersionHistory } from "./VersionHistory";
+import { PrivacyReview } from "./PrivacyReview";
+import { integrations } from "@/lib/api";
 import { PendingBadge } from "@/components/ui/Dialog";
 
 export function DocumentPassport({
@@ -296,25 +298,22 @@ export function DocumentPassport({
             </Allowed>
           </ul>
           <p className="mt-2.5 text-[11.5px] text-ink-3">
-            Signed in as <span className="text-ink-2">{role}</span>. Actions marked “Pending API” are designed but not connected to the vault
-            yet — they never change anything.
+            Signed in as <span className="text-ink-2">{role}</span>. The server checks every action against your signed-in role and records it
+            in the audit log.
           </p>
         </Section>
 
+        {state === "stored" && (
+          <Section title="Privacy review">
+            <PrivacyReview key={`${file.fileId}:${file.s3Key}`} fileId={file.fileId} classification={file.classification} canEdit={manage} uploadedAt={file.uploadedAt} />
+          </Section>
+        )}
+
         <Section title="Version history">
-          <ol className="space-y-2 text-[12.5px]">
-            <li className="flex items-center gap-2.5">
-              <span className="size-2 shrink-0 rounded-full bg-primary-hi" aria-hidden />
-              <span className="flex-1 text-ink-2">
-                Current version · {formatBytes(file.objectSize)}
-                {file.uploadedAt && <span className="text-ink-3"> · {formatFinderDate(file.uploadedAt)}</span>}
-              </span>
-            </li>
-          </ol>
-          {!integrations.versionHistory && (
-            <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-3">
-              <PendingBadge /> Earlier versions appear here once <code className="font-mono">{pendingEndpoints.versionHistory}</code> exists.
-            </p>
+          {state === "stored" ? (
+            <VersionHistory key={`${file.fileId}:${file.s3Key}`} fileId={file.fileId} />
+          ) : (
+            <p className="text-[12.5px] text-ink-3">Available once S3 confirms the file.</p>
           )}
         </Section>
 

@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { BadgeCheck, Check, CircleAlert, ExternalLink, Info, Minus, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { pendingEndpoints } from "@/lib/api";
-import { PendingBadge } from "@/components/ui/Dialog";
+import { getUsers, type DirectoryUser } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { useAudit, useFiles } from "@/lib/store";
 import { formatFull, relativeTime } from "@/lib/format";
@@ -17,6 +16,7 @@ import { PageToolbar } from "@/components/shell/PageToolbar";
 import { buttonClass } from "@/components/ui/Button";
 import { EmptyState, Notice, Panel, RowsSkeleton, SearchField, SectionLabel } from "@/components/ui/primitives";
 import { Avatar } from "@/components/vault/tags";
+import { MacieStatusPanel } from "@/components/vault/MacieResult";
 
 interface Person {
   email: string;
@@ -84,8 +84,8 @@ export function PeopleView() {
 
       <div className="mx-auto w-full max-w-[980px] space-y-8 px-4 py-6 sm:px-6">
         <Notice tone="info" icon={<Info />}>
-          SecureVault has no user-directory API yet, so accounts can&apos;t be listed, invited or changed here. This page shows your
-          verified session, and people who appear in real vault records. Account changes are made in the AWS Cognito console.
+          The directory lists every Cognito account with its group, MFA setting and status. Inviting, disabling or changing roles is done in
+          the AWS Cognito console.
         </Notice>
 
         {/* You */}
@@ -130,28 +130,23 @@ export function PeopleView() {
           </Panel>
         </section>
 
-        {/* Account directory — designed, awaiting the directory API */}
+        {/* Account directory — live from Cognito via GET /users (Admin only) */}
         <section aria-labelledby="directory">
-          <SectionLabel action={<PendingBadge />}>
+          <SectionLabel>
             <span id="directory">Directory</span>
           </SectionLabel>
           <Panel className="mt-2.5 overflow-hidden">
-            <div className="hidden grid-cols-[minmax(0,1.6fr)_90px_110px_100px] gap-3 border-b border-line px-4 py-2 text-[11.5px] font-medium text-ink-3 sm:grid">
-              <span>Account</span>
-              <span>Role</span>
-              <span>MFA</span>
-              <span>Status</span>
-            </div>
-            <div className="flex flex-col items-center px-6 py-8 text-center">
-              <span className="flex size-10 items-center justify-center rounded-xl border border-line-strong bg-surface-3 text-ink-2">
-                <UsersRound className="size-5" aria-hidden />
-              </span>
-              <p className="mt-3 text-[14px] font-medium">Account directory not connected</p>
-              <p className="mt-1 max-w-md text-[12.5px] text-ink-3">
-                Every Cognito account with its group, MFA setting and enabled/disabled status will list here once{" "}
-                <code className="font-mono text-ink-2">{pendingEndpoints.userDirectory}</code> is available. No accounts are shown until then.
-              </p>
-            </div>
+            <Directory me={email} />
+          </Panel>
+        </section>
+
+        {/* Data discovery — Amazon Macie job (Admin) */}
+        <section aria-labelledby="macie">
+          <SectionLabel>
+            <span id="macie">Sensitive-data discovery</span>
+          </SectionLabel>
+          <Panel className="mt-2.5 overflow-hidden">
+            <MacieStatusPanel />
           </Panel>
         </section>
 
@@ -281,6 +276,118 @@ export function PeopleView() {
             <li>App rules shape this interface; the API remains the authority on data access.</li>
           </ul>
         </section>
+      </div>
+    </div>
+  );
+}
+
+function Directory({ me }: { me: string }) {
+  const [state, setState] = useState<{ k: "loading" } | { k: "error"; message: string } | { k: "ok"; users: DirectoryUser[] }>({ k: "loading" });
+  const [attempt, setAttempt] = useState(0);
+  const [q, setQ] = useState("");
+
+  useEffect(() => {
+    let alive = true;
+    getUsers()
+      .then((r) => alive && setState({ k: "ok", users: r.users ?? [] }))
+      .catch((e: unknown) => alive && setState({ k: "error", message: e instanceof Error ? e.message : "Couldn't load the directory." }));
+    return () => {
+      alive = false;
+    };
+  }, [attempt]);
+
+  if (state.k === "loading") return <RowsSkeleton rows={4} />;
+  if (state.k === "error")
+    return (
+      <div className="p-3">
+        <Notice
+          tone="danger"
+          icon={<CircleAlert />}
+          action={
+            <button
+              type="button"
+              className="text-[12.5px] font-medium text-primary-hi hover:text-white"
+              onClick={() => {
+                setState({ k: "loading" });
+                setAttempt((a) => a + 1);
+              }}
+            >
+              Retry
+            </button>
+          }
+        >
+          {state.message}
+        </Notice>
+      </div>
+    );
+
+  const term = q.trim().toLowerCase();
+  const users = state.users.filter((u) => !term || `${u.email ?? ""} ${u.username} ${u.groups.join(" ")}`.toLowerCase().includes(term));
+  const mfa = (u: DirectoryUser) =>
+    u.mfaSettings?.length ? u.mfaSettings.map((m) => (m === "SOFTWARE_TOKEN_MFA" ? "Authenticator" : m === "SMS_MFA" ? "SMS" : m === "EMAIL_OTP" ? "Email" : m)).join(", ") : "Not set up";
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
+        <span className="text-[12px] text-ink-3">
+          {state.users.length} account{state.users.length === 1 ? "" : "s"} in Cognito
+        </span>
+        <SearchField label="Search accounts" value={q} onChange={setQ} placeholder="Search accounts" className="w-44 sm:w-56" />
+      </div>
+      <div className="relative overflow-x-auto">
+        <table className="w-full min-w-[680px] text-left text-[12.5px]">
+          <thead>
+            <tr className="border-b border-line text-[11.5px] text-ink-3">
+              <th scope="col" className="px-4 py-2 font-medium">Account</th>
+              <th scope="col" className="px-3 py-2 font-medium">Role</th>
+              <th scope="col" className="px-3 py-2 font-medium">MFA</th>
+              <th scope="col" className="px-3 py-2 font-medium">Status</th>
+              <th scope="col" className="px-3 py-2 font-medium">Created</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {users.map((u) => (
+              <tr key={u.sub ?? u.username} className="transition-colors hover:bg-white/[0.02]">
+                <td className="px-4 py-2.5">
+                  <span className="flex items-center gap-2.5">
+                    <Avatar email={u.email ?? u.username} tone={u.email === me ? "accent" : "neutral"} />
+                    <span className="min-w-0">
+                      <span className="block max-w-[260px] truncate text-foreground">{u.email ?? u.username}</span>
+                      <span className="text-[11.5px] text-ink-3">
+                        {u.email === me ? "You · " : ""}
+                        {u.emailVerified ? "Email verified" : "Email not verified"}
+                      </span>
+                    </span>
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  {u.groups.length ? (
+                    <span className="flex flex-wrap gap-1">
+                      {u.groups.map((g) => (
+                        <span key={g} className="rounded-md border border-line-strong bg-white/[0.03] px-1.5 py-0.5 text-[11.5px] text-ink-2">
+                          {g}
+                        </span>
+                      ))}
+                    </span>
+                  ) : (
+                    <span className="text-ink-3">No group</span>
+                  )}
+                </td>
+                <td className={cn("px-3 py-2.5", u.mfaSettings?.length ? "text-success" : "text-ink-3")}>{mfa(u)}</td>
+                <td className="px-3 py-2.5">
+                  <span className={cn("inline-flex items-center gap-1.5", u.enabled ? "text-ink-2" : "text-danger")}>
+                    <span className={cn("size-1.5 rounded-full", u.enabled ? (u.status === "CONFIRMED" ? "bg-success" : "bg-warning") : "bg-danger")} aria-hidden />
+                    {u.enabled ? (u.status === "CONFIRMED" ? "Active" : u.status.replace(/_/g, " ").toLowerCase()) : "Disabled"}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-ink-3" title={formatFull(u.createdAt)}>
+                  {relativeTime(u.createdAt) || "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {users.length === 0 && <p className="px-4 py-6 text-center text-[12.5px] text-ink-3">No accounts match.</p>}
       </div>
     </div>
   );

@@ -20,6 +20,7 @@ import { putToS3, requestUploadUrl, type UploadTicket } from "@/lib/api";
 import { formatBytes, formatFinderDate, formatFull } from "@/lib/format";
 import { clearRetry, peekRetry, takeHandedOffFile } from "@/lib/handoff";
 import { PrivacyGuardian } from "@/components/upload/PrivacyGuardian";
+import { PrivacyReview } from "@/components/vault/PrivacyReview";
 import {
   ACCEPTED_EXTENSIONS,
   classificationCopy,
@@ -583,6 +584,16 @@ function UploadProgress({
           <Row label="File ID">
             <span className="break-all font-mono text-[11.5px] text-ink-2">{run.record.fileId}</span>
           </Row>
+        </div>
+        <div className="mx-auto mt-4 max-w-sm rounded-xl border border-line bg-surface-2 p-3 text-left">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">Privacy Guardian</p>
+          <PrivacyReview
+            fileId={run.record.fileId}
+            classification={run.record.classification ?? level}
+            autoScan={/\.pdf$/i.test(run.record.fileName)}
+            uploadedAt={run.record.uploadedAt}
+            canEdit
+          />
         </div>
         <div className="mt-5 flex flex-col-reverse justify-center gap-2 sm:flex-row">
           <Button onClick={onReset}>Upload another</Button>

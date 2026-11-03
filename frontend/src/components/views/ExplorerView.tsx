@@ -5,18 +5,19 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useSearchParams } from "next/navigation";
 import { CircleAlert, FolderOpen, Loader2, Plus, RotateCw, Search, SearchX, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { integrations, pendingEndpoints } from "@/lib/api";
+import { integrations } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { useAudit, useFiles } from "@/lib/store";
 import { formatBytes, formatFinderDate, formatFull } from "@/lib/format";
 import { canDownload, canManage, classifications, fileExtension, fileKind, isDenied, kindLabel, needsAttention, uploadState, uploadStateCopy } from "@/lib/vault";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import type { ClassificationLevel, VaultFile } from "@/lib/types";
-import { PendingBadge } from "@/components/ui/Dialog";
 import { Notice } from "@/components/ui/primitives";
 import { ActionsMenu } from "@/components/vault/ActionsMenu";
 import { useDocumentActions } from "@/components/vault/DocumentActions";
 import { useDownload } from "@/components/vault/useDownload";
+import { VersionHistory } from "@/components/vault/VersionHistory";
+import { PrivacyReview } from "@/components/vault/PrivacyReview";
 import { classificationHex } from "@/components/vault/tags";
 
 /* Classification colours come from the shared design system (approved Explorer palette). */
@@ -447,10 +448,24 @@ function Passport({ file }: { file: VaultFile }) {
 
       <p className="mt-3 text-[10.5px] leading-[1.5] text-ink-3">
         {manage
-          ? "Actions with an amber dot are pending API integration: they open their dialogs but can't change anything until the backend endpoints exist."
+          ? "Changes are checked by the server against your signed-in role and recorded in the audit log."
           : `Only an Admin or the document's owner can replace, edit or delete it. You're signed in as ${role}.`}
         {!canDownload(role) && " Auditors can't download files."}
       </p>
+
+      {state === "stored" && (
+        <details className="group/pr mt-3 border-t border-line pt-3 text-[12px]">
+          <summary className="flex list-none items-center justify-between text-[11.5px] font-medium text-ink-3 hover:text-white">
+            Privacy review
+            <span className="text-[10px] transition-transform group-open/pr:rotate-180" aria-hidden>
+              ▾
+            </span>
+          </summary>
+          <div className="mt-2.5">
+            <PrivacyReview key={`${file.fileId}:${file.s3Key}`} fileId={file.fileId} classification={file.classification} canEdit={manage} uploadedAt={file.uploadedAt} />
+          </div>
+        </details>
+      )}
 
       <details className="group mt-3 border-t border-line pt-3 text-[12px]">
         <summary className="flex list-none items-center justify-between text-[11.5px] font-medium text-ink-3 hover:text-white">
@@ -466,17 +481,9 @@ function Passport({ file }: { file: VaultFile }) {
           <Field label="File ID">
             <span className="break-all font-mono text-[10.5px]">{file.fileId}</span>
           </Field>
-          <Field label="Versions">
-            <span className="inline-flex items-center gap-1.5">
-              Current only {!integrations.versionHistory && <PendingBadge />}
-            </span>
-          </Field>
         </dl>
-        {!integrations.versionHistory && (
-          <p className="mt-2 text-[10.5px] text-ink-3">
-            Earlier versions appear once <code className="font-mono">{pendingEndpoints.versionHistory}</code> exists.
-          </p>
-        )}
+        <p className="mb-2 mt-3 text-[11px] font-medium text-ink-3">Version history</p>
+        {state === "stored" ? <VersionHistory key={`${file.fileId}:${file.s3Key}`} fileId={file.fileId} compact /> : <p className="text-[11.5px] text-ink-3">Available once S3 confirms the file.</p>}
         <Link href={`/files/${encodeURIComponent(file.fileId)}`} className="mt-2.5 inline-block text-[12px] font-medium text-primary-hi hover:text-white">
           Open full passport & access history →
         </Link>

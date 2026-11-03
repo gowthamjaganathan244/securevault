@@ -122,6 +122,11 @@ export function hasRealActor(event: AuditEvent) {
   return !!event.userEmail && event.userEmail !== "unknown";
 }
 
+/** Events written by the vault itself (e.g. S3 → EventBridge confirming a replacement). */
+export function isSystemActor(event: AuditEvent) {
+  return event.userEmail?.toLowerCase() === "system";
+}
+
 /**
  * Upload events that the vault genuinely recorded in document metadata
  * (DynamoDB): S3 confirmation time for stored files, link issue time for
@@ -176,7 +181,9 @@ export function describeAction(event: AuditEvent) {
     case "FILE_DELETED":
       return "deleted";
     case "FILE_REPLACED":
-      return "replaced";
+      return "confirmed the replacement of";
+    case "PRIVACY_SCANNED":
+      return "ran a privacy scan on";
     case "METADATA_UPDATED":
       return "updated the details of";
     default:

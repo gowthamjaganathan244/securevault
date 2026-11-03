@@ -5,6 +5,7 @@ import { Amplify } from "aws-amplify";
 import { fetchAuthSession, signOut as amplifySignOut } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { amplifyConfig } from "@/lib/authConfig";
+import { UNAUTHORIZED_EVENT } from "@/lib/api";
 
 // Configure once per page load. Amplify keeps tokens in localStorage, so the
 // session survives refreshes and refreshes its own access/ID tokens.
@@ -75,6 +76,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       window.location.replace("/login");
     }
   }, []);
+
+  // The API rejected our token (expired/revoked): end the session cleanly and return to sign-in.
+  useEffect(() => {
+    const onUnauthorized = () => void signOut();
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, [signOut]);
 
   const value = useMemo(() => ({ status, claims, expiresAt, refresh, signOut }), [status, claims, expiresAt, refresh, signOut]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

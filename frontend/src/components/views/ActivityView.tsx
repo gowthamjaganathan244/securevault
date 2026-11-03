@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowUp, ChevronDown, FilePen, Replace, Trash2, CircleAlert, CircleCheck, Clock, Download, History, Info, RotateCw, SearchX, ShieldX } from "lucide-react";
+import { ArrowUp, ChevronDown, FilePen, Replace, ScanText, Trash2, CircleAlert, CircleCheck, Clock, Download, History, Info, RotateCw, SearchX, ShieldX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/lib/session";
 import { useAudit, useFiles } from "@/lib/store";
 import { dayLabel, formatFull, formatTime, titleCase } from "@/lib/format";
-import { describeAction, hasRealActor, hasRealFile, isDenied, isIncomplete, recordEvents, scopeEvents } from "@/lib/vault";
+import { describeAction, hasRealActor, hasRealFile, isDenied, isIncomplete, isSystemActor, recordEvents, scopeEvents } from "@/lib/vault";
 import type { AuditEvent } from "@/lib/types";
 import { PageToolbar } from "@/components/shell/PageToolbar";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +37,13 @@ export function ActivityView() {
   // Access events from the audit log + upload events recorded on documents.
   const events = useMemo(
     () =>
-      [...auditEvents.map((e) => ({ ...e, source: "audit" as const })), ...recordEvents(files)].sort(
+      [
+        ...auditEvents.map((e) => ({ ...e, source: "audit" as const })),
+        // Document-record upload events only fill gaps the audit log doesn't cover (older uploads, unfinished ones).
+        ...recordEvents(files).filter(
+          (r) => r.action !== "FILE_UPLOADED" || !auditEvents.some((a) => a.action === "FILE_UPLOADED" && a.fileId === r.fileId),
+        ),
+      ].sort(
         (a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp),
       ),
     [auditEvents, files],
@@ -49,7 +55,9 @@ export function ActivityView() {
   const visible = useMemo(() => {
     const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return scoped.filter((e) => {
-      if (source !== "all" && e.source !== source) return false;
+      const isUpload = e.action === "FILE_UPLOADED" || e.action === "UPLOAD_NOT_CONFIRMED";
+      if (source === "records" && !isUpload) return false;
+      if (source === "audit" && isUpload) return false;
       if (result === "allowed" && (isDenied(e) || isIncomplete(e))) return false;
       if (result === "denied" && !isDenied(e)) return false;
       if (action !== "all" && e.action !== action) return false;
@@ -63,8 +71,8 @@ export function ActivityView() {
 
   const counts = useMemo(
     () => ({
-      uploads: scoped.filter((e) => e.source === "records").length,
-      allowed: scoped.filter((e) => e.source === "audit" && !isDenied(e)).length,
+      uploads: scoped.filter((e) => e.action === "FILE_UPLOADED" || e.action === "UPLOAD_NOT_CONFIRMED").length,
+      allowed: scoped.filter((e) => e.source === "audit" && e.action !== "FILE_UPLOADED" && !isDenied(e)).length,
       denied: scoped.filter(isDenied).length,
     }),
     [scoped],
@@ -74,7 +82,7 @@ export function ActivityView() {
     const header = ["timestamp", "source", "result", "action", "actor", "role", "file_name", "file_id", "reason", "audit_id"];
     const esc = (v: string | undefined) => `"${(v ?? "").replace(/"/g, '""')}"`;
     const rows = visible.map((e) =>
-      [e.timestamp, e.source === "records" ? "document record" : "audit log", e.result, e.action, e.userEmail, e.userRole, e.fileName, e.fileId, e.reason, e.auditId].map(esc).join(","),
+      [e.timestamp, (e.source === "records" || e.action === "FILE_UPLOADED") ? "document record" : "audit log", e.result, e.action, e.userEmail, e.userRole, e.fileName, e.fileId, e.reason, e.auditId].map(esc).join(","),
     );
     const blob = new Blob([[header.join(","), ...rows].join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -187,8 +195,8 @@ export function ActivityView() {
           <p className="mb-4 flex items-start gap-2 text-[12px] leading-relaxed text-ink-3">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             <span>
-              Access events come from the vault&apos;s audit log; uploads come from the timestamps recorded on each document
-              {oversight ? "" : " (yours only)"}. Sign-ins aren&apos;t recorded.
+              Events come from the vault&apos;s audit log; uploads made before audit logging, and unfinished uploads, come from each
+              document&apos;s record{oversight ? "" : " (yours only)"}. Sign-ins aren&apos;t recorded.
               <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                 {Object.entries(LIFECYCLE).map(([k, v]) => (
                   <span key={k} className="inline-flex items-center gap-1.5">
@@ -198,7 +206,7 @@ export function ActivityView() {
                     {v.label}
                   </span>
                 ))}
-                <span className="text-ink-3">— shown here once the API records these events.</span>
+                <span className="text-ink-3">— shown as the vault records them.</span>
               </span>
             </span>
           </p>
@@ -290,6 +298,7 @@ const LIFECYCLE: Record<string, { icon: typeof Trash2; cls: string; label: strin
   FILE_DELETED: { icon: Trash2, cls: "bg-white/10 text-ink-2", label: "Deleted" },
   FILE_REPLACED: { icon: Replace, cls: "bg-primary/15 text-primary-hi", label: "Replaced" },
   METADATA_UPDATED: { icon: FilePen, cls: "bg-[#a78bfa]/15 text-[#c4b5fd]", label: "Details changed" },
+  PRIVACY_SCANNED: { icon: ScanText, cls: "bg-internal/15 text-internal", label: "Privacy scanned" },
 };
 
 /** One audit event as a sentence: actor · action · document, with the outcome as the node. */
@@ -310,7 +319,13 @@ export function ActivityLine({
   const denied = isDenied(event);
   const incomplete = isIncomplete(event);
   const lifecycle = LIFECYCLE[event.action];
-  const actor = !hasRealActor(event) ? "An unidentified request" : event.userEmail === me ? "You" : event.userEmail;
+  const actor = isSystemActor(event)
+    ? "SecureVault"
+    : !hasRealActor(event)
+      ? "An unidentified request"
+      : event.userEmail === me
+        ? "You"
+        : event.userEmail;
   const docName = hasRealFile(event) ? event.fileName || "a document" : "an unspecified document";
 
   const body = (
@@ -319,16 +334,17 @@ export function ActivityLine({
         className={cn(
           "relative z-10 mt-0.5 flex shrink-0 items-center justify-center rounded-full",
           compact ? "size-5" : "size-6",
-          lifecycle ? lifecycle.cls : denied ? "bg-danger/15 text-danger" : incomplete ? "bg-warning/15 text-warning" : event.source === "records" ? "bg-primary/15 text-primary-hi" : "bg-success/15 text-success",
+          lifecycle ? lifecycle.cls : denied ? "bg-danger/15 text-danger" : incomplete ? "bg-warning/15 text-warning" : (event.source === "records" || event.action === "FILE_UPLOADED") ? "bg-primary/15 text-primary-hi" : "bg-success/15 text-success",
         )}
       >
-        {lifecycle ? <lifecycle.icon className="size-3" /> : denied ? <ShieldX className="size-3" /> : incomplete ? <Clock className="size-3" /> : event.source === "records" ? <ArrowUp className="size-3" /> : <CircleCheck className="size-3" />}
-        <span className="sr-only">{lifecycle ? lifecycle.label : denied ? "Denied" : incomplete ? "Incomplete" : event.source === "records" ? "Uploaded" : "Allowed"}</span>
+        {lifecycle ? <lifecycle.icon className="size-3" /> : denied ? <ShieldX className="size-3" /> : incomplete ? <Clock className="size-3" /> : (event.source === "records" || event.action === "FILE_UPLOADED") ? <ArrowUp className="size-3" /> : <CircleCheck className="size-3" />}
+        <span className="sr-only">{lifecycle ? lifecycle.label : denied ? "Denied" : incomplete ? "Incomplete" : (event.source === "records" || event.action === "FILE_UPLOADED") ? "Uploaded" : "Allowed"}</span>
       </span>
       <span className="min-w-0 flex-1">
         <span className={cn("block leading-snug text-ink-2", compact ? "text-[12.5px]" : "text-[13.5px]")}>
           <span className="font-medium text-foreground">{actor}</span>
-          {hasRealActor(event) && event.userRole && <span className="text-ink-3"> ({event.userRole})</span>} {describeAction(event)}{" "}
+          {hasRealActor(event) && !isSystemActor(event) && event.userRole && event.userRole !== "System" && <span className="text-ink-3"> ({event.userRole})</span>}
+          {isSystemActor(event) && <span className="text-ink-3"> (automatic)</span>} {describeAction(event)}{" "}
           {linkFiles && !expandable ? (
             <Link href={`/files?doc=${encodeURIComponent(event.fileId!)}`} className="text-foreground underline-offset-2 hover:underline">
               {docName}
@@ -390,8 +406,8 @@ export function ActivityLine({
               )}
             </dd>
             <dt className="text-ink-3">Source</dt>
-            <dd className="text-ink-2">{event.source === "records" ? "Document record (DynamoDB metadata)" : "Audit log"}</dd>
-            <dt className="text-ink-3">{event.source === "records" ? "Record" : "Audit ID"}</dt>
+            <dd className="text-ink-2">{(event.source === "records" || event.action === "FILE_UPLOADED") ? "Document record (DynamoDB metadata)" : "Audit log"}</dd>
+            <dt className="text-ink-3">{(event.source === "records" || event.action === "FILE_UPLOADED") ? "Record" : "Audit ID"}</dt>
             <dd className="break-all font-mono text-[11.5px] text-ink-3">{event.auditId}</dd>
           </dl>
         </div>
@@ -464,11 +480,11 @@ function AuditTable({ events }: { events: AuditEvent[] }) {
                     <span
                       className={cn(
                         "inline-flex items-center gap-1.5 font-medium",
-                        denied ? "text-danger" : isIncomplete(e) ? "text-warning" : e.source === "records" ? "text-primary-hi" : "text-success",
+                        denied ? "text-danger" : isIncomplete(e) ? "text-warning" : (e.source === "records" || e.action === "FILE_UPLOADED") ? "text-primary-hi" : "text-success",
                       )}
                     >
-                      {denied ? <ShieldX className="size-3.5" /> : isIncomplete(e) ? <Clock className="size-3.5" /> : e.source === "records" ? <ArrowUp className="size-3.5" /> : <CircleCheck className="size-3.5" />}
-                      {denied ? "Denied" : isIncomplete(e) ? "Incomplete" : e.source === "records" ? "Uploaded" : "Allowed"}
+                      {denied ? <ShieldX className="size-3.5" /> : isIncomplete(e) ? <Clock className="size-3.5" /> : (e.source === "records" || e.action === "FILE_UPLOADED") ? <ArrowUp className="size-3.5" /> : <CircleCheck className="size-3.5" />}
+                      {denied ? "Denied" : isIncomplete(e) ? "Incomplete" : (e.source === "records" || e.action === "FILE_UPLOADED") ? "Uploaded" : "Allowed"}
                     </span>
                   </td>
                   <td className="whitespace-nowrap px-3 py-2 text-ink-2">{titleCase(e.action)}</td>
