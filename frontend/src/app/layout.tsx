@@ -1,14 +1,25 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { AppShell } from "@/components/layout/AppShell";
+import { AppShell } from "@/components/shell/AppShell";
 import AuthProvider from "@/components/auth/AuthProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "SecureVault | Enterprise Secure Data Access",
-  description: "Secure Data Access and Audit Platform for Sensitive Records.",
+  title: {
+    default: "SecureVault",
+    template: "%s · SecureVault",
+  },
+  description: "Secure document vault with classification, private storage and an audit trail.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#09090b",
+  colorScheme: "dark",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -17,12 +28,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} antialiased`}>
+    <html lang="en" className={`dark ${inter.variable}`}>
+      <body className="font-sans antialiased">
         <AuthProvider>
-          <AppShell>
-            {children}
-          </AppShell>
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>
