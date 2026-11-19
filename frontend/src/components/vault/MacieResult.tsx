@@ -34,17 +34,17 @@ export function jobState(jobStatus: string, lastRunError?: string): { label: str
 }
 
 const toneCls: Record<Tone, string> = {
-  info: "bg-primary/12 text-primary-hi",
-  success: "bg-success/12 text-success",
-  danger: "bg-danger/12 text-danger",
-  warning: "bg-warning/12 text-warning",
-  neutral: "bg-white/[0.06] text-ink-2",
+  info: "border-primary/30 bg-primary/[0.09] text-primary-hi",
+  success: "border-success/30 bg-success/[0.09] text-success",
+  danger: "border-danger/35 bg-danger/[0.10] text-danger",
+  warning: "border-warning/35 bg-warning/[0.10] text-warning",
+  neutral: "border-line-strong bg-tint/[0.04] text-ink-2",
 };
 
 export function JobBadge({ jobStatus, lastRunError }: { jobStatus: string; lastRunError?: string }) {
   const s = jobState(jobStatus, lastRunError);
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11px] font-medium", toneCls[s.tone])}>
+    <span className={cn("inline-flex h-[22px] items-center gap-1.5 rounded-full border px-2 text-[11px] font-medium", toneCls[s.tone])}>
       {s.tone === "info" ? <Loader2 className="size-3 animate-spin" aria-hidden /> : <span className="size-1.5 rounded-full bg-current" aria-hidden />}
       {s.label}
     </span>
@@ -87,7 +87,7 @@ export function FileMacieCard({ fileId, uploadedAt }: { fileId: string; uploaded
         <span className="flex-1">{state.message}</span>
         <button
           type="button"
-          className="font-medium text-primary-hi hover:text-white"
+          className="font-medium text-primary-hi hover:text-foreground"
           onClick={() => {
             setState({ k: "loading" });
             setAttempt((a) => a + 1);
@@ -189,7 +189,7 @@ export function MacieStatusPanel() {
         <span className="flex-1">{state.message}</span>
         <button
           type="button"
-          className="font-medium text-primary-hi hover:text-white"
+          className="font-medium text-primary-hi hover:text-foreground"
           onClick={() => {
             setState({ k: "loading" });
             setAttempt((a) => a + 1);
@@ -206,7 +206,7 @@ export function MacieStatusPanel() {
       <div className="flex flex-wrap items-center gap-2.5">
         <span className="font-medium text-foreground">{s.provider}</span>
         <JobBadge jobStatus={s.jobStatus} lastRunError={s.lastRunError} />
-        <span className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-medium", s.configured ? "bg-success/12 text-success" : "bg-white/[0.06] text-ink-2")}>
+        <span className={cn("rounded-md px-1.5 py-0.5 text-[11px] font-medium", s.configured ? "bg-success/[0.1] text-success" : "bg-tint/[0.06] text-ink-2")}>
           {s.configured ? "Configured" : "Not configured"}
         </span>
       </div>
@@ -224,7 +224,7 @@ export function MacieStatusPanel() {
           <span className="break-all font-mono text-[11px]">{s.jobId}</span>
         </Row>
       </dl>
-      <p className="rounded-lg border border-warning/25 bg-warning/[0.06] px-3 py-2 text-[12px] text-ink-2">{s.notice}</p>
+      <p className="rounded-lg border border-warning/30 bg-warning/[0.07] px-3 py-2 text-[12px] text-ink-2">{s.notice}</p>
     </div>
   );
 }
