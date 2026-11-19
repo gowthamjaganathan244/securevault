@@ -23,7 +23,7 @@ export function nameHint(fileName: string) {
 
 /**
  * Before upload: an honest, name-only hint. The real Textract + Comprehend
- * review and Polly guidance run after S3 confirms the upload (see PrivacyReview).
+ * review and Polly guidance run after S3 confirms the upload (see InspectionEvidence).
  */
 export function PrivacyGuardian({
   fileName,

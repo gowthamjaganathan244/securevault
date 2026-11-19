@@ -14,13 +14,13 @@ export function PassportView({ fileId }: { fileId: string }) {
 
   return (
     <div className="min-h-full">
-      <PageToolbar title="Document passport" />
-      <div className="mx-auto w-full max-w-2xl px-4 py-5 sm:px-6 sm:py-8">
+      <PageToolbar eyebrow="Protected archive" title="Document passport" />
+      <div className="mx-auto w-full max-w-3xl px-4 py-5 sm:px-6 sm:py-8">
         <Link
           href={`/files?doc=${encodeURIComponent(fileId)}`}
           className="mb-4 inline-flex items-center gap-1 rounded-md text-[13px] text-ink-3 transition-colors hover:text-foreground"
         >
-          <ChevronLeft className="size-4" /> Explorer
+          <ChevronLeft className="size-4" /> Archive
         </Link>
 
         {error && !file ? (
@@ -46,9 +46,9 @@ export function PassportView({ fileId }: { fileId: string }) {
             <EmptyState
               icon={<FileQuestion />}
               title="Document not found"
-              action={<ButtonLink href="/files">Open Explorer</ButtonLink>}
+              action={<ButtonLink href="/files">Open the archive</ButtonLink>}
             >
-              No vault record matches this ID. It may have been removed, or the link is incomplete.
+              No vault record matches this identifier. It may have been deleted, or the link is incomplete.
             </EmptyState>
           </Panel>
         ) : (
