@@ -38,9 +38,9 @@ export function PrivacyGuardian({
   const isPdf = /\.pdf$/i.test(fileName);
 
   return (
-    <section aria-labelledby="guardian-title" className="mt-5 rounded-xl border border-line bg-surface-2/60 p-4">
+    <section aria-labelledby="guardian-title" className="mt-5 rounded-xl border border-line bg-surface-2/70 p-4">
       <h3 id="guardian-title" className="flex items-center gap-2 text-[13px] font-semibold">
-        <ShieldAlert className="size-4 text-primary-hi" aria-hidden /> Privacy Guardian
+        <ShieldAlert className="size-4 text-primary-hi" aria-hidden /> Pre-inspection hint
       </h3>
 
       <div className="mt-3 flex items-start gap-2.5 text-[12.5px]">
@@ -52,7 +52,7 @@ export function PrivacyGuardian({
             </p>
             <p className="mt-0.5 text-ink-3">Based on the file name only — the contents haven&apos;t been scanned yet.</p>
             {hint.level !== level && (
-              <button type="button" onClick={() => onApply(hint.level)} className="mt-1.5 text-[12.5px] font-medium text-primary-hi hover:text-white">
+              <button type="button" onClick={() => onApply(hint.level)} className="mt-1.5 text-[12.5px] font-medium text-primary-hi hover:text-foreground">
                 Use {hint.level}
               </button>
             )}
