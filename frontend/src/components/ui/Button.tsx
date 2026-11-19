@@ -11,13 +11,14 @@ const base =
   "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 [&_svg]:shrink-0";
 
 const variants: Record<Variant, string> = {
+  // Security Cyan with terminal-black text: AA contrast in both themes.
   primary:
-    "border border-[#5a91f5] bg-primary text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.16),0_1px_2px_rgba(0,0,0,0.4)] hover:bg-[#4386f7]",
+    "border border-primary bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_1px_2px_rgb(0_0_0/0.3),0_0_0_0_var(--color-primary)] hover:bg-primary-hi hover:border-primary-hi hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.28),0_6px_18px_-8px_var(--color-primary)]",
   secondary:
-    "bg-surface-3 text-foreground border border-line-strong hover:bg-surface-4 hover:border-[#465c79] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
-  ghost: "text-ink-2 hover:text-foreground hover:bg-white/[0.06]",
-  danger: "bg-surface-3 text-danger border border-[#693f4e] hover:bg-danger/10",
-  plain: "text-primary-hi hover:text-white",
+    "bg-surface-3 text-foreground border border-line-strong hover:bg-surface-4 hover:border-tint/20 shadow-[inset_0_1px_0_color-mix(in_oklab,var(--color-tint)_5%,transparent)]",
+  ghost: "text-ink-2 hover:text-foreground hover:bg-tint/[0.06]",
+  danger: "bg-danger/[0.08] text-danger border border-danger/35 hover:bg-danger/[0.15]",
+  plain: "text-primary-hi hover:text-foreground",
 };
 
 const sizes: Record<Size, string> = {

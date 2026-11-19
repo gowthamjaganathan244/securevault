@@ -23,7 +23,7 @@ interface Item {
   divider?: boolean;
 }
 
-/** "More actions" button + menu used on every Explorer card and row. */
+/** "More actions" button + menu used on every archive card and row. */
 export function ActionsMenu({ file, onView, className }: { file: VaultFile; onView: () => void; className?: string }) {
   const { role, email } = useSession();
   const { open, retry } = useDocumentActions();
@@ -38,9 +38,9 @@ export function ActionsMenu({ file, onView, className }: { file: VaultFile; onVi
   const state = uploadState(file);
   const manage = canManage(file, role, email);
   const items: Item[] = [
-    { key: "view", label: "View details", icon: <PanelRightOpen />, run: onView },
-    ...(canDownload(role) && state === "stored" ? [{ key: "download", label: "View / Download", icon: <ArrowDownToLine />, run: () => download(file) }] : []),
-    ...(manage && state === "not-received" ? [{ key: "retry", label: "Re-upload", icon: <RotateCw />, run: () => retry(file) }] : []),
+    { key: "view", label: "Open passport", icon: <PanelRightOpen />, run: onView },
+    ...(canDownload(role) && state === "stored" ? [{ key: "download", label: "Secure view / download", icon: <ArrowDownToLine />, run: () => download(file) }] : []),
+    ...(manage && state === "not-received" ? [{ key: "retry", label: "Re-check in", icon: <RotateCw />, run: () => retry(file) }] : []),
     ...(manage && state === "stored" ? [{ key: "replace", label: "Replace file", icon: <Replace />, run: () => open("replace", file), pending: !integrations.replaceFile }] : []),
     ...(manage ? [{ key: "edit", label: "Edit details", icon: <FilePen />, run: () => open("edit", file), pending: !integrations.updateMetadata }] : []),
     {
@@ -116,8 +116,8 @@ export function ActionsMenu({ file, onView, className }: { file: VaultFile; onVi
         }}
         onKeyDown={(e) => e.stopPropagation()}
         className={cn(
-          "flex size-7 items-center justify-center rounded-lg text-ink-3 transition-colors duration-[140ms] hover:bg-white/[0.08] hover:text-foreground",
-          menuOpen && "bg-white/[0.1] text-foreground",
+          "flex size-7 items-center justify-center rounded-lg text-ink-3 transition-colors duration-[140ms] hover:bg-tint/[0.08] hover:text-foreground",
+          menuOpen && "bg-tint/[0.1] text-foreground",
           className,
         )}
       >
@@ -139,7 +139,7 @@ export function ActionsMenu({ file, onView, className }: { file: VaultFile; onVi
         >
           {items.map((it) => (
             <div key={it.key}>
-              {it.divider && <div className="mx-1 my-1 h-px bg-white/[0.07]" />}
+              {it.divider && <div className="mx-1 my-1 h-px bg-line" />}
               <button
                 type="button"
                 role="menuitem"
@@ -151,7 +151,7 @@ export function ActionsMenu({ file, onView, className }: { file: VaultFile; onVi
                   "flex h-8 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] outline-none transition-colors duration-[120ms] [&_svg]:size-3.5 [&_svg]:shrink-0",
                   it.danger
                     ? "text-danger hover:bg-danger/10 focus-visible:bg-danger/10"
-                    : "text-ink-2 hover:bg-white/[0.06] hover:text-foreground focus-visible:bg-white/[0.06] focus-visible:text-foreground",
+                    : "text-ink-2 hover:bg-tint/[0.06] hover:text-foreground focus-visible:bg-tint/[0.06] focus-visible:text-foreground",
                 )}
               >
                 {it.icon}

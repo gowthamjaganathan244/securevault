@@ -1,6 +1,6 @@
 import type { ClassificationLevel } from "./types";
 
-// Carries a file dropped on the Workspace into Upload Studio across a client-side navigation.
+// Carries a file dropped on the Inspection Lane into Check-in across a client-side navigation.
 let pending: File | null = null;
 
 export function handOffFile(file: File) {

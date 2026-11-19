@@ -96,11 +96,12 @@ export function ActivityView() {
   return (
     <div className="min-h-full">
       <PageToolbar
-        title={oversight ? "Activity" : "Your activity"}
+        eyebrow="Audit"
+        title={oversight ? "Chain of Inspection" : "Your chain of activity"}
         subtitle={
           loading
-            ? "Loading the audit log…"
-            : `${visible.length} event${visible.length === 1 ? "" : "s"} · ${counts.uploads} uploads · ${counts.allowed} allowed · ${counts.denied} denied`
+            ? "Reading the audit log…"
+            : `${visible.length} event${visible.length === 1 ? "" : "s"} · ${counts.uploads} check-ins · ${counts.allowed} allowed · ${counts.denied} denied`
         }
         actions={
           <>
@@ -141,8 +142,8 @@ export function ActivityView() {
           onChange={setSource}
           options={[
             { value: "all", label: "All sources" },
-            { value: "audit", label: "Access log" },
-            { value: "records", label: "Uploads" },
+            { value: "audit", label: "Audit log" },
+            { value: "records", label: "Check-ins" },
           ]}
         />
         <Segmented
@@ -176,7 +177,7 @@ export function ActivityView() {
             <select
               value={action}
               onChange={(e) => setAction(e.target.value)}
-              className="h-7 appearance-none rounded-lg border border-line bg-white/[0.03] pl-2.5 pr-7 text-[12px] font-medium text-ink-2 outline-none transition-colors hover:border-line-strong focus:border-primary/50 [&>option]:bg-surface-2"
+              className="h-[34px] appearance-none rounded-[11px] border border-line bg-surface-1 pl-3 pr-8 text-[12.5px] font-medium text-ink-2 outline-none transition-colors hover:border-line-strong focus:border-primary/60 [&>option]:bg-surface-2"
             >
               <option value="all">All actions</option>
               {actions.map((a) => (
@@ -185,31 +186,32 @@ export function ActivityView() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 text-ink-3" />
+            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-3" />
           </label>
         )}
       </PageToolbar>
 
-      <div className="mx-auto w-full max-w-[980px] px-4 py-5 sm:px-6">
+      <div className="mx-auto w-full max-w-[1080px] px-4 py-6 sm:px-6">
         {!loading && actions.length > 0 && (
-          <p className="mb-4 flex items-start gap-2 text-[12px] leading-relaxed text-ink-3">
-            <Info className="mt-0.5 size-3.5 shrink-0" />
-            <span>
-              Events come from the vault&apos;s audit log; uploads made before audit logging, and unfinished uploads, come from each
-              document&apos;s record{oversight ? "" : " (yours only)"}. Sign-ins aren&apos;t recorded.
-              <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                {Object.entries(LIFECYCLE).map(([k, v]) => (
-                  <span key={k} className="inline-flex items-center gap-1.5">
-                    <span className={cn("flex size-4 items-center justify-center rounded-full", v.cls)} aria-hidden>
-                      <v.icon className="size-2.5" />
-                    </span>
-                    {v.label}
-                  </span>
-                ))}
-                <span className="text-ink-3">— shown as the vault records them.</span>
+          <div className="mb-5 rounded-2xl border border-line bg-surface-1/60 p-3.5 text-[12px] leading-relaxed text-ink-3">
+            <p className="flex items-start gap-2">
+              <Info className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                Events as recorded by the vault&apos;s audit API, plus check-ins taken from each document&apos;s record where the audit log has no entry
+                {oversight ? "" : " (yours only)"}. This view displays the record; it doesn&apos;t independently verify its integrity. Sign-ins aren&apos;t recorded.
               </span>
-            </span>
-          </p>
+            </p>
+            <ul className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 pl-5">
+              {Object.entries(LIFECYCLE).map(([k, v]) => (
+                <li key={k} className="inline-flex items-center gap-1.5">
+                  <span className={cn("flex size-4 items-center justify-center rounded-full", v.cls)} aria-hidden>
+                    <v.icon className="size-2.5" />
+                  </span>
+                  {v.label}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {error && events.length === 0 ? (
@@ -230,8 +232,8 @@ export function ActivityView() {
           </Panel>
         ) : scoped.length === 0 ? (
           <Panel>
-            <EmptyState icon={<History />} title="No activity recorded yet">
-              {oversight ? "Download attempts will appear here as they happen." : "Your downloads and denied attempts will appear here."}
+            <EmptyState icon={<History />} title="Nothing recorded yet">
+              {oversight ? "Downloads, denials and lifecycle changes appear here as the vault records them." : "Your downloads, denied attempts and changes appear here."}
             </EmptyState>
           </Panel>
         ) : visible.length === 0 ? (
@@ -279,10 +281,12 @@ function Timeline({ events, me, linkFiles }: { events: AuditEvent[]; me: string;
     <div className="space-y-6">
       {groups.map((g) => (
         <section key={g.label} aria-label={g.label} className="reveal">
-          <h2 className="mb-1 px-2 text-[12px] font-semibold text-ink-2">
-            {g.label}
+          <h2 className="mb-2 flex items-center gap-3 px-1">
+            <span className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-ink-2">{g.label}</span>
+            <span aria-hidden className="h-px flex-1 bg-line" />
+            <span className="tabular text-[11px] text-ink-3">{g.items.length}</span>
           </h2>
-          <ol className="relative">
+          <ol className="plate relative rounded-2xl px-1.5 py-1">
             {g.items.map((e) => (
               <ActivityLine key={e.auditId} event={e} me={me} linkFiles={linkFiles && hasRealFile(e)} expandable />
             ))}
@@ -295,10 +299,10 @@ function Timeline({ events, me, linkFiles }: { events: AuditEvent[]; me: string;
 
 /** Visual identity per event type — lifecycle events are ready for when the API records them. */
 const LIFECYCLE: Record<string, { icon: typeof Trash2; cls: string; label: string }> = {
-  FILE_DELETED: { icon: Trash2, cls: "bg-white/10 text-ink-2", label: "Deleted" },
+  FILE_DELETED: { icon: Trash2, cls: "bg-tint/10 text-ink-2", label: "Deleted" },
   FILE_REPLACED: { icon: Replace, cls: "bg-primary/15 text-primary-hi", label: "Replaced" },
-  METADATA_UPDATED: { icon: FilePen, cls: "bg-[#a78bfa]/15 text-[#c4b5fd]", label: "Details changed" },
-  PRIVACY_SCANNED: { icon: ScanText, cls: "bg-internal/15 text-internal", label: "Privacy scanned" },
+  METADATA_UPDATED: { icon: FilePen, cls: "bg-titanium/15 text-titanium", label: "Details changed" },
+  PRIVACY_SCANNED: { icon: ScanText, cls: "bg-primary/15 text-primary-hi", label: "Privacy scanned" },
 };
 
 /** One audit event as a sentence: actor · action · document, with the outcome as the node. */
@@ -327,6 +331,9 @@ export function ActivityLine({
         ? "You"
         : event.userEmail;
   const docName = hasRealFile(event) ? event.fileName || "a document" : "an unspecified document";
+  const isCheckIn = event.source === "records" || event.action === "FILE_UPLOADED";
+  const status = lifecycle ? lifecycle.label : denied ? "Denied" : incomplete ? "Incomplete" : isCheckIn ? "Checked in" : "Allowed";
+  const statusCls = denied ? "text-danger" : incomplete ? "text-warning" : lifecycle || isCheckIn ? "text-ink-3" : "text-success";
 
   const body = (
     <>
@@ -357,13 +364,12 @@ export function ActivityLine({
           <span className={cn("mt-0.5 block text-[12px]", denied ? "text-danger/90" : incomplete ? "text-warning/90" : "text-ink-3")}>{event.reason}</span>
         )}
       </span>
-      <time
-        dateTime={event.timestamp}
-        title={formatFull(event.timestamp)}
-        className={cn("tabular shrink-0 pt-0.5 text-ink-3", compact ? "text-[11.5px]" : "text-[12px]")}
-      >
-        {compact && dayLabel(event.timestamp) !== "Today" ? shortDate(event.timestamp) : formatTime(event.timestamp)}
-      </time>
+      <span className="flex shrink-0 flex-col items-end pt-0.5">
+        <time dateTime={event.timestamp} title={formatFull(event.timestamp)} className={cn("tabular text-ink-3", compact ? "text-[11.5px]" : "text-[12px]")}>
+          {!expandable && dayLabel(event.timestamp) !== "Today" ? shortDate(event.timestamp) : formatTime(event.timestamp)}
+        </time>
+        {!compact && <span className={cn("mt-0.5 hidden text-[11px] font-medium sm:block", statusCls)}>{status}</span>}
+      </span>
     </>
   );
 
@@ -372,23 +378,25 @@ export function ActivityLine({
   }
 
   return (
-    <li className="group relative before:absolute before:bottom-0 before:left-[19px] before:top-0 before:w-px before:bg-line first:before:top-4 last:before:bottom-auto last:before:h-4">
+    <li className="group relative before:absolute before:bottom-0 before:left-[20px] before:top-0 before:w-px before:bg-line first:before:top-5 last:before:bottom-auto last:before:h-5">
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-start gap-3 rounded-lg px-2 py-2.5 text-left transition-colors duration-[120ms] hover:bg-white/[0.03]"
+        className="flex w-full items-start gap-3 rounded-xl px-2 py-2.5 text-left transition-colors duration-[120ms] hover:bg-tint/[0.03]"
       >
         {body}
         <ChevronDown className={cn("mt-1 size-3.5 shrink-0 text-ink-3 transition-transform duration-[180ms]", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="mb-2 ml-11 mr-2 animate-rise rounded-lg border border-line bg-surface-1 p-3">
+        <div className="mb-2 ml-11 mr-2 animate-unfold rounded-xl border border-line bg-surface-2 p-3">
           <dl className="grid grid-cols-[96px_1fr] gap-x-3 gap-y-1.5 text-[12px]">
             <dt className="text-ink-3">Recorded</dt>
             <dd className="text-ink-2">{formatFull(event.timestamp)}</dd>
             <dt className="text-ink-3">Result</dt>
-            <dd className={denied ? "text-danger" : "text-success"}>{event.result}</dd>
+            <dd className={statusCls}>
+              {status} <span className="font-mono text-[11px] text-ink-3">({event.result})</span>
+            </dd>
             <dt className="text-ink-3">Action</dt>
             <dd className="font-mono text-[11.5px] text-ink-2">{event.action}</dd>
             <dt className="text-ink-3">Actor</dt>
@@ -398,7 +406,7 @@ export function ActivityLine({
             <dt className="text-ink-3">Document</dt>
             <dd className="break-all text-ink-2">
               {linkFiles ? (
-                <Link href={`/files?doc=${encodeURIComponent(event.fileId!)}`} className="text-primary-hi hover:text-white">
+                <Link href={`/files?doc=${encodeURIComponent(event.fileId!)}`} className="text-primary-hi hover:text-foreground">
                   {event.fileName || event.fileId}
                 </Link>
               ) : (
@@ -406,7 +414,7 @@ export function ActivityLine({
               )}
             </dd>
             <dt className="text-ink-3">Source</dt>
-            <dd className="text-ink-2">{(event.source === "records" || event.action === "FILE_UPLOADED") ? "Document record (DynamoDB metadata)" : "Audit log"}</dd>
+            <dd className="text-ink-2">{event.source === "records" ? "Document record (DynamoDB metadata)" : "Audit log (DynamoDB)"}</dd>
             <dt className="text-ink-3">{(event.source === "records" || event.action === "FILE_UPLOADED") ? "Record" : "Audit ID"}</dt>
             <dd className="break-all font-mono text-[11.5px] text-ink-3">{event.auditId}</dd>
           </dl>
@@ -445,25 +453,25 @@ function AuditTable({ events }: { events: AuditEvent[] }) {
     <Panel className="overflow-x-auto">
       <table className="w-full min-w-[820px] text-left text-[12.5px]">
         <thead>
-          <tr className="border-b border-line text-[11.5px] text-ink-3">
+          <tr className="border-b border-line">
             {cols.map((c) => (
               <th
                 key={c.key}
                 scope="col"
                 aria-sort={sort.key === c.key ? (sort.dir === 1 ? "ascending" : "descending") : "none"}
-                className="px-3 py-2 font-medium"
+                className="px-3 py-2.5 font-medium"
               >
                 <button
                   type="button"
                   onClick={() => setSort((s) => ({ key: c.key, dir: s.key === c.key ? (s.dir === 1 ? -1 : 1) : 1 }))}
-                  className={cn("flex items-center gap-1 hover:text-foreground", sort.key === c.key && "text-ink-2")}
+                  className={cn("eyebrow flex items-center gap-1 hover:text-foreground", sort.key === c.key && "text-ink-2")}
                 >
                   {c.label}
                   {sort.key === c.key && <ChevronDown className={cn("size-3 transition-transform", sort.dir === 1 && "rotate-180")} />}
                 </button>
               </th>
             ))}
-            <th scope="col" className="px-3 py-2 font-medium">
+            <th scope="col" className="eyebrow px-3 py-2.5 font-medium">
               Reason
             </th>
           </tr>
@@ -472,7 +480,7 @@ function AuditTable({ events }: { events: AuditEvent[] }) {
           {sorted.map((e) => {
             const denied = isDenied(e);
             return (
-                <tr key={e.auditId} className="transition-colors hover:bg-white/[0.02]">
+                <tr key={e.auditId} className="transition-colors hover:bg-tint/[0.025]">
                   <td className="tabular whitespace-nowrap px-3 py-2 text-ink-2" title={formatFull(e.timestamp)}>
                     {formatFull(e.timestamp)}
                   </td>

@@ -57,7 +57,7 @@ export function VersionHistory({ fileId, compact }: { fileId: string; compact?: 
             setState({ k: "loading" });
             setAttempt((a) => a + 1);
           }}
-          className="font-medium text-primary-hi hover:text-white"
+          className="font-medium text-primary-hi hover:text-foreground"
         >
           Retry
         </button>
@@ -69,8 +69,8 @@ export function VersionHistory({ fileId, compact }: { fileId: string; compact?: 
   return (
     <ol className="space-y-1.5">
       {state.versions.map((v) => (
-        <li key={v.versionId} className={cn("flex items-center gap-2.5 rounded-lg border px-2.5 py-2", v.isCurrent ? "border-primary/30 bg-primary/[0.06]" : "border-line")}>
-          <span className={cn("size-1.5 shrink-0 rounded-full", v.isCurrent ? "bg-primary-hi" : "bg-ink-3")} aria-hidden />
+        <li key={v.versionId} className={cn("flex items-center gap-2.5 rounded-xl border px-3 py-2.5", v.isCurrent ? "border-primary/35 bg-primary/[0.06]" : "border-line bg-tint/[0.015]")}>
+          <span className={cn("size-1.5 shrink-0 rounded-full", v.isCurrent ? "bg-primary shadow-[0_0_8px_var(--color-primary)]" : "bg-ink-3")} aria-hidden />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[12px] text-foreground" title={v.fileName}>
               {v.fileName}
@@ -87,7 +87,7 @@ export function VersionHistory({ fileId, compact }: { fileId: string; compact?: 
               onClick={() => download(v)}
               disabled={busy === v.versionId}
               aria-label={`Download version from ${formatFinderDate(v.createdAt)}`}
-              className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-2 transition-colors hover:bg-white/[0.08] hover:text-foreground disabled:opacity-50", compact && "size-6")}
+              className={cn("flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-2 transition-colors hover:bg-tint/[0.08] hover:text-foreground disabled:opacity-50", compact && "size-6")}
             >
               {busy === v.versionId ? <Loader2 className="size-3.5 animate-spin" /> : <ArrowDownToLine className="size-3.5" />}
             </button>

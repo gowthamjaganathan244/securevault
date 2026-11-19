@@ -73,9 +73,9 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
             {
               id: "act:upload",
               group: "Actions" as const,
-              label: "Upload a document",
+              label: "Check in a document",
               icon: <ArrowUpFromLine className="size-4" />,
-              keywords: "upload add new file document",
+              keywords: "upload check in add new file document",
               run: go("/upload"),
             },
           ]
@@ -137,14 +137,14 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center px-3 pt-[12vh] sm:pt-[16vh]" onKeyDown={onKeyDown}>
-      <div className="absolute inset-0 animate-fade-in bg-black/50" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 animate-fade-in bg-black/55 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
         aria-label="Search SecureVault"
-        className="glass relative w-full max-w-[600px] animate-pop overflow-hidden rounded-2xl"
+        className="glass glass-solid relative w-full max-w-[620px] animate-pop overflow-hidden rounded-2xl"
       >
-        <div className="flex items-center gap-2.5 border-b border-white/[0.07] px-4">
+        <div className="flex items-center gap-2.5 border-b border-line px-4">
           <Search className="size-4 shrink-0 text-ink-3" />
           <input
             ref={inputRef}
@@ -153,7 +153,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
               setQuery(e.target.value);
               setCursor(0);
             }}
-            placeholder={canBrowse ? "Search documents, places and actions" : "Search places and actions"}
+            placeholder={canBrowse ? "Find a document, area or action" : "Find an area or action"}
             role="combobox"
             aria-expanded="true"
             aria-controls={listId}
@@ -173,8 +173,8 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
             return (
               <div key={item.id}>
                 {header && (
-                  <p className="px-2.5 pb-1 pt-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-3">
-                    {header === "Documents" && !query ? "Recent documents" : header}
+                  <p className="eyebrow px-2.5 pb-1 pt-2.5">
+                    {header === "Documents" && !query ? "Recently archived" : header}
                   </p>
                 )}
                 <div
@@ -186,7 +186,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
                   onClick={item.run}
                   className={cn(
                     "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[13.5px] transition-colors duration-[120ms]",
-                    i === active ? "bg-primary/[0.18] text-foreground" : "text-ink-2",
+                    i === active ? "bg-primary/[0.12] text-foreground shadow-[inset_2px_0_0_var(--color-primary)]" : "text-ink-2",
                   )}
                 >
                   <span className="flex w-5 shrink-0 justify-center text-ink-3">{item.icon}</span>
@@ -199,7 +199,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
           })}
         </div>
 
-        <div className="hidden items-center gap-4 border-t border-white/[0.07] px-4 py-2 text-[11.5px] text-ink-3 sm:flex">
+        <div className="hidden items-center gap-4 border-t border-line px-4 py-2 text-[11.5px] text-ink-3 sm:flex">
           <span className="flex items-center gap-1">
             <Kbd>↑</Kbd>
             <Kbd>↓</Kbd> move

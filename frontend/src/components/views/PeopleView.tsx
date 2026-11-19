@@ -73,8 +73,9 @@ export function PeopleView() {
   return (
     <div className="min-h-full">
       <PageToolbar
-        title="People & Access"
-        subtitle="Who is in the vault and what each role can do"
+        eyebrow="Access control"
+        title="Clearance Rules"
+        subtitle="Who holds clearance, what each role may do, and where enforcement happens"
         actions={
           <a href={consoleUrl} target="_blank" rel="noopener noreferrer" className={buttonClass("secondary", "md")}>
             Manage in Cognito <ExternalLink className="size-3.5" />
@@ -84,14 +85,14 @@ export function PeopleView() {
 
       <div className="mx-auto w-full max-w-[980px] space-y-8 px-4 py-6 sm:px-6">
         <Notice tone="info" icon={<Info />}>
-          The directory lists every Cognito account with its group, MFA setting and status. Inviting, disabling or changing roles is done in
-          the AWS Cognito console.
+          Clearance comes from Cognito groups. The vault API checks every request against the caller&apos;s token and is the authority; the rules
+          below describe that behaviour and shape this interface. Inviting, disabling or changing roles is done in the AWS Cognito console.
         </Notice>
 
         {/* You */}
         <section aria-labelledby="you">
           <SectionLabel>
-            <span id="you">Your session</span>
+            <span id="you">Your clearance</span>
           </SectionLabel>
           <Panel className="mt-2.5 p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-3">
@@ -102,7 +103,7 @@ export function PeopleView() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {(groups.length ? groups : ["No group"]).map((g) => (
-                  <span key={g} className="inline-flex h-6 items-center rounded-md border border-primary/30 bg-primary/10 px-2 text-[12px] font-medium text-primary-hi">
+                  <span key={g} className="inline-flex h-6 items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 text-[12px] font-medium text-primary-hi">
                     {g}
                   </span>
                 ))}
@@ -155,7 +156,7 @@ export function PeopleView() {
           <SectionLabel
             action={<SearchField label="Search people" value={query} onChange={setQuery} placeholder="Search email" className="w-44 sm:w-56" />}
           >
-            <span id="people">Seen in vault records</span>
+            <span id="people">Seen in the chain of inspection</span>
           </SectionLabel>
           <Panel className="mt-2.5 overflow-hidden">
             {loadError ? (
@@ -174,7 +175,7 @@ export function PeopleView() {
               <div className="relative overflow-x-auto">
                 <table className="w-full min-w-[640px] text-left text-[12.5px]">
                   <thead>
-                    <tr className="border-b border-line text-[11.5px] text-ink-3">
+                    <tr className="border-b border-line text-[11px] uppercase tracking-[0.1em] text-ink-3">
                       <th scope="col" className="px-4 py-2 font-medium">Person</th>
                       <th scope="col" className="px-3 py-2 font-medium">Roles recorded</th>
                       <th scope="col" className="px-3 py-2 text-right font-medium">Uploads</th>
@@ -186,7 +187,7 @@ export function PeopleView() {
                   </thead>
                   <tbody className="divide-y divide-line">
                     {visible.map((p) => (
-                      <tr key={p.email} className="transition-colors hover:bg-white/[0.02]">
+                      <tr key={p.email} className="transition-colors hover:bg-tint/[0.025]">
                         <td className="px-4 py-2.5">
                           <span className="flex items-center gap-2.5">
                             <Avatar email={p.email} tone={p.email === email ? "accent" : "neutral"} />
@@ -200,7 +201,7 @@ export function PeopleView() {
                           {p.roles.size ? (
                             <span className="flex flex-wrap gap-1">
                               {[...p.roles].map((r) => (
-                                <span key={r} className="rounded-md border border-line-strong bg-white/[0.03] px-1.5 py-0.5 text-[11.5px] text-ink-2">
+                                <span key={r} className="rounded-md border border-line-strong bg-tint/[0.03] px-1.5 py-0.5 text-[11.5px] text-ink-2">
                                   {r}
                                 </span>
                               ))}
@@ -218,7 +219,7 @@ export function PeopleView() {
                         <td className="px-3 py-2.5 text-right">
                           <Link
                             href={`/audit-logs?q=${encodeURIComponent(p.email)}`}
-                            className="whitespace-nowrap text-[12px] font-medium text-primary-hi hover:text-white"
+                            className="whitespace-nowrap text-[12px] font-medium text-primary-hi hover:text-foreground"
                           >
                             Activity
                           </Link>
@@ -239,12 +240,12 @@ export function PeopleView() {
         {/* Matrix */}
         <section aria-labelledby="matrix" className="reveal">
           <SectionLabel>
-            <span id="matrix">Who can do what</span>
+            <span id="matrix">Clearance matrix</span>
           </SectionLabel>
           <Panel className="mt-2.5 overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-[12.5px]">
               <thead>
-                <tr className="border-b border-line text-[11.5px] text-ink-3">
+                <tr className="border-b border-line text-[11px] uppercase tracking-[0.1em] text-ink-3">
                   <th scope="col" className="px-4 py-2 font-medium">Capability</th>
                   {(["Admin", "User", "Auditor"] as UserRole[]).map((r) => (
                     <th key={r} scope="col" className={cn("px-3 py-2 text-center font-medium", r === role && "text-primary-hi")}>
@@ -258,11 +259,16 @@ export function PeopleView() {
                   <MatrixRow key={d.href} label={`Open ${d.label}`} note="App navigation" cells={(r) => (d.roles.includes(r) ? "yes" : "no")} />
                 ))}
                 <MatrixRow
-                  label="Download documents"
-                  note={auditorDenialSeen ? "Server — Auditor refusal seen in the audit log" : "Server decides each request"}
+                  label="Secure view / download"
+                  note={auditorDenialSeen ? "Server — Auditor refusal seen in the audit log" : "Server decides each request; attempts are recorded"}
                   cells={(r) => (r === "Auditor" ? "no" : "yes")}
                 />
-                <MatrixRow label="Activity scope" note="App view" cells={(r) => (r === "User" ? "own" : "all")} />
+                <MatrixRow label="Check in documents" note="Server issues the upload link" cells={(r) => (r === "Auditor" ? "no" : "yes")} />
+                <MatrixRow label="Replace, edit or delete" note="Server — Admin, or the document's owner" cells={(r) => (r === "Admin" ? "all" : r === "User" ? "own" : "no")} />
+                <MatrixRow label="Lower a privacy level" note="Server — owners may only raise it" cells={(r) => (r === "Admin" ? "yes" : "no")} />
+                <MatrixRow label="Read the user directory" note="Server — GET /users" cells={(r) => (r === "Admin" ? "yes" : "no")} />
+                <MatrixRow label="Macie job status" note="Server — GET /macie/status" cells={(r) => (r === "Admin" ? "yes" : "no")} />
+                <MatrixRow label="Activity visible" note="App view of the audit log" cells={(r) => (r === "User" ? "own" : "all")} />
               </tbody>
             </table>
           </Panel>
@@ -273,7 +279,7 @@ export function PeopleView() {
             <li className="flex items-center gap-1.5">
               <Minus className="size-3" /> Not allowed
             </li>
-            <li>App rules shape this interface; the API remains the authority on data access.</li>
+            <li>“Server” rows are enforced by the vault API; the others are interface rules. The API remains the authority.</li>
           </ul>
         </section>
       </div>
@@ -306,7 +312,7 @@ function Directory({ me }: { me: string }) {
           action={
             <button
               type="button"
-              className="text-[12.5px] font-medium text-primary-hi hover:text-white"
+              className="text-[12.5px] font-medium text-primary-hi hover:text-foreground"
               onClick={() => {
                 setState({ k: "loading" });
                 setAttempt((a) => a + 1);
@@ -337,7 +343,7 @@ function Directory({ me }: { me: string }) {
       <div className="relative overflow-x-auto">
         <table className="w-full min-w-[680px] text-left text-[12.5px]">
           <thead>
-            <tr className="border-b border-line text-[11.5px] text-ink-3">
+            <tr className="border-b border-line text-[11px] uppercase tracking-[0.1em] text-ink-3">
               <th scope="col" className="px-4 py-2 font-medium">Account</th>
               <th scope="col" className="px-3 py-2 font-medium">Role</th>
               <th scope="col" className="px-3 py-2 font-medium">MFA</th>
@@ -347,7 +353,7 @@ function Directory({ me }: { me: string }) {
           </thead>
           <tbody className="divide-y divide-line">
             {users.map((u) => (
-              <tr key={u.sub ?? u.username} className="transition-colors hover:bg-white/[0.02]">
+              <tr key={u.sub ?? u.username} className="transition-colors hover:bg-tint/[0.025]">
                 <td className="px-4 py-2.5">
                   <span className="flex items-center gap-2.5">
                     <Avatar email={u.email ?? u.username} tone={u.email === me ? "accent" : "neutral"} />
@@ -364,7 +370,7 @@ function Directory({ me }: { me: string }) {
                   {u.groups.length ? (
                     <span className="flex flex-wrap gap-1">
                       {u.groups.map((g) => (
-                        <span key={g} className="rounded-md border border-line-strong bg-white/[0.03] px-1.5 py-0.5 text-[11.5px] text-ink-2">
+                        <span key={g} className="rounded-md border border-line-strong bg-tint/[0.03] px-1.5 py-0.5 text-[11.5px] text-ink-2">
                           {g}
                         </span>
                       ))}
@@ -415,7 +421,7 @@ function MatrixRow({ label, note, cells }: { label: string; note: string; cells:
           <td key={r} className="px-3 py-2.5 text-center">
             {v === "yes" && <Check className="mx-auto size-4 text-success" aria-label="Allowed" />}
             {v === "no" && <Minus className="mx-auto size-4 text-ink-3" aria-label="Not allowed" />}
-            {(v === "own" || v === "all") && <span className="text-[12px] text-ink-2">{v === "own" ? "Own events" : "Everyone"}</span>}
+            {(v === "own" || v === "all") && <span className="text-[12px] text-ink-2">{v === "own" ? "Own only" : "Everyone"}</span>}
           </td>
         );
       })}

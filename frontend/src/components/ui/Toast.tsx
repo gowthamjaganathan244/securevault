@@ -50,7 +50,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <div
               key={t.id}
               role={t.tone === "danger" ? "alert" : "status"}
-              className="glass pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-2.5 rounded-xl px-3.5 py-3"
+              className="glass glass-solid pointer-events-auto flex w-full max-w-sm animate-rise items-start gap-2.5 rounded-xl px-3.5 py-3"
             >
               <Icon
                 className={cn(
@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 {t.body && <p className="mt-0.5 text-[12.5px] text-ink-2">{t.body}</p>}
                 {t.action && (
                   <button
-                    className="mt-1.5 text-[12.5px] font-medium text-primary-hi hover:text-white"
+                    className="mt-1.5 text-[12.5px] font-medium text-primary-hi hover:text-foreground"
                     onClick={() => {
                       t.action?.onClick();
                       dismiss(t.id);
@@ -78,7 +78,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 aria-label="Dismiss"
                 onClick={() => dismiss(t.id)}
-                className="-m-1 rounded-md p-1 text-ink-3 transition-colors hover:bg-white/10 hover:text-foreground"
+                className="-m-1 rounded-md p-1 text-ink-3 transition-colors hover:bg-tint/10 hover:text-foreground"
               >
                 <X className="size-3.5" />
               </button>
