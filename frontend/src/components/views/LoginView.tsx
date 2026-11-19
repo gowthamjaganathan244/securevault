@@ -246,7 +246,7 @@ export function LoginView() {
                   </div>
                 </div>
                 <Button variant="primary" size="lg" className="mt-5 h-11 w-full rounded-xl" onClick={() => router.replace("/dashboard")}>
-                  Continue to your Workspace <ArrowRight />
+                  Enter the inspection lane <ArrowRight />
                 </Button>
                 <Button variant="ghost" className="mt-2 w-full" onClick={() => void signOut()}>
                   Use a different account

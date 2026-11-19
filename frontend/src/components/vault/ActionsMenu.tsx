@@ -23,7 +23,7 @@ interface Item {
   divider?: boolean;
 }
 
-/** "More actions" button + menu used on every Explorer card and row. */
+/** "More actions" button + menu used on every archive card and row. */
 export function ActionsMenu({ file, onView, className }: { file: VaultFile; onView: () => void; className?: string }) {
   const { role, email } = useSession();
   const { open, retry } = useDocumentActions();

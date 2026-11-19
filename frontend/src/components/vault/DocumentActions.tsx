@@ -155,7 +155,7 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
       <ul className="mt-4 space-y-1.5 text-[12.5px] text-ink-2">
         <li className="flex gap-2">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-danger" aria-hidden />
-          It disappears from Explorer and can no longer be downloaded or replaced from the vault.
+          It leaves the archive and can no longer be downloaded or replaced from the vault.
         </li>
         <li className="flex gap-2">
           <span className="mt-1.5 size-1 shrink-0 rounded-full bg-danger" aria-hidden />

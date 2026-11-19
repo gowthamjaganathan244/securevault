@@ -76,7 +76,7 @@ export function UploadStudio() {
     setPreviewUrl(previewRef.current);
   }, []);
 
-  // A file dropped on the Workspace arrives here; pick it up once.
+  // A file dropped on the Inspection Lane arrives here; pick it up once.
   useEffect(() => {
     if (handoffChecked.current) return;
     handoffChecked.current = true;

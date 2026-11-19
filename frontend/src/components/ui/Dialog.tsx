@@ -43,7 +43,7 @@ export function Dialog({
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Escape" && !busy) {
-      // Mark as handled so page-level Escape handlers (e.g. Explorer's inspector) leave it alone.
+      // Mark as handled so page-level Escape handlers (e.g. the archive's passport) leave it alone.
       e.preventDefault();
       e.stopPropagation();
       onClose();

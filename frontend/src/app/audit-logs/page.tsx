@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActivityView } from "@/components/views/ActivityView";
 
-export const metadata: Metadata = { title: "Activity" };
+export const metadata: Metadata = { title: "Chain of Inspection" };
 
 export default function AuditLogsPage() {
   return (

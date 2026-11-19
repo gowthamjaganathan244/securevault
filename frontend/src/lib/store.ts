@@ -6,7 +6,7 @@ import type { AuditEvent, VaultFile } from "./types";
 
 /**
  * A tiny stale-while-revalidate cache shared across routes, so moving between
- * Workspace, Explorer and Activity is instant and each API is hit at most once per
+ * the Lane, Archive and Chain is instant and each API is hit at most once per
  * window unless the user refreshes.
  */
 interface Snapshot<T> {
