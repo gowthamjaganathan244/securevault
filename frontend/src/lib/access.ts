@@ -1,4 +1,4 @@
-import { CloudUpload, FolderOpen, History, LayoutDashboard, ShieldUser, type LucideIcon } from "lucide-react";
+import { Archive, FileUp, Link2, ScanLine, ShieldCheck, type LucideIcon } from "lucide-react";
 import type { UserRole } from "./types";
 
 export interface Destination {
@@ -12,17 +12,18 @@ export interface Destination {
 }
 
 /**
- * Navigation rules enforced by this interface. They mirror the original
- * sidebar (Admin: everything, User: files + upload, Auditor: audit logs),
- * with the Workspace open to everyone because Cognito returns all users there.
- * These are UI rules only — the APIs themselves decide what data they return.
+ * The facility's areas, in the order a document moves through them.
+ * Routes are unchanged so existing links and bookmarks keep working.
+ * Role rules mirror the original app (Admin: everything, User: archive +
+ * check-in, Auditor: audit history). These are UI rules only — the APIs
+ * decide what data each role actually receives.
  */
 export const destinations: Destination[] = [
-  { href: "/dashboard", label: "Workspace", shortLabel: "Workspace", hint: "Home", icon: LayoutDashboard, roles: ["Admin", "User", "Auditor"] },
-  { href: "/files", label: "Explorer", shortLabel: "Explorer", hint: "All documents", icon: FolderOpen, roles: ["Admin", "User"] },
-  { href: "/upload", label: "Upload", shortLabel: "Upload", hint: "Secure document upload", icon: CloudUpload, roles: ["Admin", "User"] },
-  { href: "/audit-logs", label: "Activity", shortLabel: "Activity", hint: "Audit timeline", icon: History, roles: ["Admin", "Auditor", "User"] },
-  { href: "/admin-users", label: "People & Access", shortLabel: "People", hint: "Users and permissions", icon: ShieldUser, roles: ["Admin"] },
+  { href: "/dashboard", label: "Inspection Lane", shortLabel: "Lane", hint: "Documents moving through screening", icon: ScanLine, roles: ["Admin", "User", "Auditor"] },
+  { href: "/upload", label: "Check-in", shortLabel: "Check-in", hint: "Bring a document into the vault", icon: FileUp, roles: ["Admin", "User"] },
+  { href: "/files", label: "Archive", shortLabel: "Archive", hint: "Protected documents", icon: Archive, roles: ["Admin", "User"] },
+  { href: "/audit-logs", label: "Chain of Inspection", shortLabel: "Chain", hint: "Recorded activity", icon: Link2, roles: ["Admin", "Auditor", "User"] },
+  { href: "/admin-users", label: "Clearance Rules", shortLabel: "Clearance", hint: "People and access control", icon: ShieldCheck, roles: ["Admin"] },
 ];
 
 export function destinationsFor(role: UserRole) {

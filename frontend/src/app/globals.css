@@ -363,3 +363,9 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Indeterminate session check: a short segment travels the lane while Cognito restores the session. */
+@keyframes lane-sweep {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(300%); }
+}
