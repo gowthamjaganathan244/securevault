@@ -38,7 +38,7 @@ import {
 import type { VaultFile } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/primitives";
-import { ClassificationTag, FileGlyph, UploadStatus, classificationHex, classificationStyle } from "./tags";
+import { ClassificationTag, FileGlyph, TierMark, UploadStatus, classificationHex, classificationStyle } from "./tags";
 import { useDownload } from "./useDownload";
 import { useDocumentActions } from "./DocumentActions";
 import { VersionHistory } from "./VersionHistory";
@@ -271,10 +271,7 @@ export function DocumentPassport({
                 classificationStyle[file.classification].text,
               )}
             >
-              {(() => {
-                const Icon = classificationStyle[file.classification].icon;
-                return <Icon className="size-3.5" />;
-              })()}
+              <TierMark level={file.classification} />
             </span>
             <div className="text-[12.5px]">
               <p className="font-medium text-foreground">

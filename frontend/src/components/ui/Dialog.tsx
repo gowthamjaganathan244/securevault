@@ -67,7 +67,7 @@ export function Dialog({
 
   return (
     <div className="fixed inset-0 z-[65] flex items-end justify-center sm:items-center sm:p-4" onKeyDown={onKeyDown}>
-      <div className="absolute inset-0 animate-fade-in bg-black/55" onClick={() => !busy && onClose()} aria-hidden />
+      <div className="absolute inset-0 animate-fade-in bg-black/60 backdrop-blur-[2px]" onClick={() => !busy && onClose()} aria-hidden />
       <div
         ref={ref}
         role="dialog"
@@ -81,7 +81,7 @@ export function Dialog({
             <span
               className={cn(
                 "flex size-9 shrink-0 items-center justify-center rounded-xl border [&_svg]:size-4",
-                tone === "danger" ? "border-danger/30 bg-danger/10 text-danger" : "border-primary/30 bg-primary/10 text-primary-hi",
+                tone === "danger" ? "border-danger/35 bg-danger/10 text-danger" : "border-primary/30 bg-primary/10 text-primary-hi",
               )}
               aria-hidden
             >
@@ -103,14 +103,14 @@ export function Dialog({
             onClick={onClose}
             disabled={busy}
             aria-label="Close"
-            className="-mr-1.5 -mt-1 rounded-lg p-1.5 text-ink-3 transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-40"
+            className="-mr-1.5 -mt-1 rounded-lg p-1.5 text-ink-3 transition-colors hover:bg-tint/[0.06] hover:text-foreground disabled:opacity-40"
           >
             <X className="size-4" />
           </button>
         </div>
         {children && <div className="min-h-0 overflow-y-auto px-5 pb-4">{children}</div>}
         {footer && (
-          <div className="flex flex-col-reverse gap-2 border-t border-white/[0.07] px-5 py-3.5 pb-[calc(14px+env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:pb-3.5">
+          <div className="flex flex-col-reverse gap-2 border-t border-line px-5 py-3.5 pb-[calc(14px+env(safe-area-inset-bottom))] sm:flex-row sm:justify-end sm:pb-3.5">
             {footer}
           </div>
         )}
@@ -127,7 +127,7 @@ export function PendingIntegration({ action, endpoint }: { action: string; endpo
       <div>
         <p className="font-medium text-foreground">{action} is not connected yet</p>
         <p className="mt-0.5 text-ink-3">
-          The vault API doesn&apos;t provide <code className="rounded bg-white/[0.06] px-1 py-px font-mono text-[11.5px] text-ink-2">{endpoint}</code>{" "}
+          The vault API doesn&apos;t provide <code className="rounded bg-tint/[0.06] px-1 py-px font-mono text-[11.5px] text-ink-2">{endpoint}</code>{" "}
           yet. Nothing has been changed.
         </p>
       </div>

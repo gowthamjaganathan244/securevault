@@ -33,7 +33,7 @@ import type { ClassificationLevel, VaultFile } from "@/lib/types";
 import { PageToolbar } from "@/components/shell/PageToolbar";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Notice } from "@/components/ui/primitives";
-import { ClassificationTag, FileGlyph, classificationHex, classificationStyle } from "@/components/vault/tags";
+import { ClassificationTag, FileGlyph, TierMark, classificationHex, classificationStyle } from "@/components/vault/tags";
 
 type Stage = 1 | 2 | 3;
 type Phase = "link" | "transfer" | "confirm";
@@ -471,7 +471,6 @@ function PrivacyPicker({ value, onChange }: { value: ClassificationLevel; onChan
       {classifications.map((c, i) => {
         const selected = c === value;
         const style = classificationStyle[c];
-        const Icon = style.icon;
         const copy = classificationCopy[c];
         return (
           <button
@@ -497,7 +496,7 @@ function PrivacyPicker({ value, onChange }: { value: ClassificationLevel; onChan
           >
             <span className="flex items-center gap-2.5">
               <span className={cn("flex size-7 items-center justify-center rounded-lg border", style.bg, style.ring, style.text)}>
-                <Icon className="size-3.5" />
+                <TierMark level={c} />
               </span>
               <span className="text-[14px] font-semibold text-foreground">{c}</span>
               <span

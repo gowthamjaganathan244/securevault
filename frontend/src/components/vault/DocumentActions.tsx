@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog, PendingIntegration } from "@/components/ui/Dialog";
 import { Notice } from "@/components/ui/primitives";
 import { useToast } from "@/components/ui/Toast";
-import { ClassificationTag, FileGlyph, classificationHex, classificationStyle } from "./tags";
+import { ClassificationTag, FileGlyph, TierMark, alpha, classificationHex, classificationStyle } from "./tags";
 
 type Kind = "delete" | "replace" | "edit";
 type Phase = { k: "idle" } | { k: "working" } | { k: "error"; message: string };
@@ -136,7 +136,7 @@ function DeleteDialog({ file, onClose }: { file: VaultFile; onClose: () => void 
           </Button>
           <Button
             size="lg"
-            className="bg-danger text-white hover:bg-[#f43f5e]"
+            variant="danger" className="border-danger bg-danger text-primary-foreground hover:bg-danger/90"
             disabled={!connected || working}
             onClick={() =>
               run(async () => {
@@ -251,7 +251,7 @@ function ReplaceDialog({ file, onClose }: { file: VaultFile; onClose: () => void
           <FileSummary label="Replacement" file={{ name: next.name, type: next.type, size: next.size, level: file.classification }} />
           <div className="mt-2 flex items-center justify-between gap-2 text-[12px]">
             <span className={cn(problem ? "text-danger" : "text-success")}>{problem ?? "Ready — keeps the current privacy level"}</span>
-            <button type="button" onClick={() => inputRef.current?.click()} className="font-medium text-primary-hi hover:text-white">
+            <button type="button" onClick={() => inputRef.current?.click()} className="font-medium text-primary-hi hover:text-foreground">
               Choose another
             </button>
           </div>
@@ -349,7 +349,6 @@ function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () =>
         <div role="radiogroup" aria-label="Privacy level" className="mt-2 grid grid-cols-2 gap-1.5">
           {classifications.map((c) => {
             const on = c === level;
-            const Icon = classificationStyle[c].icon;
             return (
               <button
                 key={c}
@@ -360,11 +359,11 @@ function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () =>
                 onClick={() => setLevel(c)}
                 className={cn(
                   "flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-[13px] transition-[border-color,background-color]",
-                  on ? "bg-white/[0.05]" : "border-line hover:border-line-strong",
+                  on ? "bg-tint/[0.05]" : "border-line hover:border-line-strong",
                 )}
-                style={on ? { borderColor: `${classificationHex[c]}80` } : undefined}
+                style={on ? { borderColor: alpha(classificationHex[c], 55) } : undefined}
               >
-                <Icon className={cn("size-3.5", classificationStyle[c].text)} aria-hidden />
+                <TierMark level={c} className={classificationStyle[c].text} />
                 <span className="flex-1 font-medium">{c}</span>
                 {c === file.classification && <span className="text-[10.5px] text-ink-3">current</span>}
               </button>
@@ -386,7 +385,7 @@ function EditMetadataDialog({ file, onClose }: { file: VaultFile; onClose: () =>
           rows={3}
           placeholder="Why does this document exist?"
           aria-invalid={tooLong}
-          className="mt-1.5 w-full resize-none rounded-xl border border-line-strong bg-white/[0.03] px-3 py-2.5 text-[13.5px] outline-none transition-[border-color,box-shadow] focus:border-primary/60 focus:shadow-[0_0_0_4px_rgba(52,121,237,0.18)] focus-visible:outline-none"
+          className="mt-1.5 w-full resize-none rounded-xl border border-line-strong bg-tint/[0.03] px-3 py-2.5 text-[13.5px] outline-none transition-[border-color,box-shadow] focus:border-primary/60 focus:shadow-[0_0_0_4px_color-mix(in_oklab,var(--color-primary)_18%,transparent)] focus-visible:outline-none"
         />
       </label>
       <p className="mt-2 text-[11.5px] text-ink-3">
